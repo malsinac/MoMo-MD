@@ -2,6 +2,8 @@ module analysis_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
     implicit none
 
+    public :: g_r
+
 contains
 
     subroutine g_r(gr_mat, dens, pos, max_dist)
