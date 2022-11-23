@@ -31,6 +31,20 @@ contains
 
     end subroutine write_system_information
 
+    subroutine write_velocities(vel, unit_nr)
+        implicit none
+        ! In/Out variables
+        real(kind=dp), dimension(:,:), intent(in) :: vel
+        integer(kind=i64), intent(in)             :: unit_nr
+        ! Internal variables
+        integer(kind=I64) :: n_p, i_aux
+
+        do i_aux=1, n_p
+            write(unit=unit_nr, fmt='(F12.8,F12.8,F12.8,F12.8)') vel(i_aux,1), vel(i_aux,2), vel(i_aux,3), norm2(vel(i_aux,:))
+        end do
+
+    end subroutine write_velocities
+
 
 
 end module writers_m

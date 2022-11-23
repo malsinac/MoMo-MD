@@ -40,4 +40,36 @@ contains
         deallocate(new_force)
     end subroutine velocity_verlet
 
+    subroutine euler_integrator(pos, new_pos, vel, new_vel, boundary, dt, forc)
+        implicit none
+        ! In/Out variables
+        real(kind=DP), intent(in), dimension(:,:)    :: pos, vel, forc
+        real(kind=DP), intent(out), dimension(:,:)   :: new_pos, new_vel
+        real(kind=DP), intent(in)                    :: boundary, dt
+        ! Function variables
+        integer(kind=I64)                           :: n_p, i
+
+        n_p = size(pos, dim=1, kind=I64)
+        
+        ! Update positions
+        new_pos = pos + (vel * dt) + (0.5_DP * forc * dt * dt)
+        do i = 1, n_p
+            call pbc(new_pos(i, :), boundary)
+        end do
+
+        new_vel = vel + ((forc/MASS) * dt)
+
+    end subroutine euler_integrator
+
+    subroutine compute_velocities(new_pos, prev_pos, dt, vel)
+        implicit none
+        ! In/Out variables
+        real(kind=DP), intent(in), dimension(:, :)   :: new_pos, prev_pos
+        real(kind=DP), intent(inout), dimension(:,:) :: vel
+        real(kind=DP), intent(in)                    :: dt
+
+        vel = (new_pos - prev_pos) / (2.0_DP * dt)
+
+    end subroutine compute_velocities
+
 end module integrtors_m
