@@ -53,14 +53,14 @@ contains
         real(kind=dp), intent(out)                  :: msd_vec
         real(kind=dp), dimension(:,:), intent(in)   :: pos, init_pos
         ! Internal variables
-        integer(kind=i64)                           :: num_frames, i_frame, j_part, n_p
+        integer(kind=i64)                           :: j_part, n_p
         real(kind=dp)                               :: dd
 
         n_p = size(pos, dim=2)
         msd_vec = 0.0_dp
 
         do j_part = 1, n_p
-            dd = norm2(pos(j_part, :) - init_pos) ** 2
+            dd = norm2(pos(j_part, :) - init_pos(j_part, :)) ** 2
             msd_vec = msd_vec + dd
         end do
         msd_vec = msd_vec / real(n_p, kind=dp)

@@ -39,6 +39,8 @@ contains
         ! Internal variables
         integer(kind=I64) :: n_p, i_aux
 
+        n_p = size(vel, dim=1, kind=i64)
+
         do i_aux=1, n_p
             write(unit=unit_nr, fmt='(F12.8,F12.8,F12.8,F12.8)') vel(i_aux,1), vel(i_aux,2), vel(i_aux,3), norm2(vel(i_aux,:))
         end do

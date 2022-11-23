@@ -10,10 +10,10 @@ module therm_m
 
 contains
 
-    function calc_pressure(dens, lenth, forces, positions, temp, cutoff) result(press)
+    function calc_pressure(dens, lenth, positions, temp, cutoff) result(press)
         implicit none
         ! In/Out variables
-        real(kind=dp), dimension(:,:), intent(in) :: forces, positions
+        real(kind=dp), dimension(:,:), intent(in) :: positions
         real(kind=dp), intent(in)                 :: dens, lenth, temp, cutoff
         real(kind=dp)                             :: press
         ! Internal variables
