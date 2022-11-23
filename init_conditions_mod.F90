@@ -1,8 +1,12 @@
+#define MASS 1.0_DP
+#define TIMESTEP 0.0001_DP
+#define CUTOFF_SET 2.5_DP
+
 module init_cond_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
     implicit none
 
-    public :: bimodal_dist_velocities
+    public :: bimodal_dist_velocities, init_positions_sc
 
 contains
 
@@ -50,5 +54,35 @@ contains
         end do
 
     end subroutine bimodal_dist_velocities
+
+    subroutine init_positions_sc(rho, pos)
+        implicit none
+        ! In/Out variables
+        real(kind=DP), intent(inout), dimension(:, :) :: pos
+        real(kind=DP), intent(in)                     :: rho
+        ! Internal variables
+        integer(kind=I64)                             :: M, i, j, k, p, N
+        real(kind=DP)                                 :: L, a
+
+        N = size(pos, dim=1, kind=I64)
+        M = int(N ** (1.0_DP / 3.0_DP), kind=I64) + 1
+        L = (real(N, kind=DP)/rho) ** (1.0_DP/3.0_DP)
+        a = L/M
+
+        print '(A)', ""
+        print '(A,I3,A,I3,A,F12.8,A,F12.8)', "sc lattice, parameters: N=", N, " M=", M, " L=", L, " a=", a
+
+        p = 1
+        do i = 0, M - 1
+            do j = 0, M - 1
+                do k = 0, M - 1
+                    ! p = (k+1) + (j*M) + (i * (M**2))
+                    pos(p, :) = [real(i, kind=DP)*a + a*0.5_DP, real(j, kind=DP)*a + a*0.5_DP, real(k, kind=DP)*a + a*0.5_DP]
+                    p = p + 1
+                end do
+            end do
+        end do
+
+    end subroutine    
 
 end module init_cond_m
