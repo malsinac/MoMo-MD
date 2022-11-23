@@ -46,27 +46,24 @@ contains
 
     end subroutine g_r
 
-    subroutine calc_msd(msd_vec, pos)
+    subroutine calc_msd(msd_vec, pos, init_pos)
         ! Necessito guardar les posicions per a cada particula per cada frame
         implicit none
         ! In/Out variables
-        real(kind=dp), dimension(:), intent(out)    :: msd_vec
-        real(kind=dp), dimension(:,:,:), intent(in) :: pos
+        real(kind=dp), intent(out)                  :: msd_vec
+        real(kind=dp), dimension(:,:), intent(in)   :: pos, init_pos
         ! Internal variables
         integer(kind=i64)                           :: num_frames, i_frame, j_part, n_p
         real(kind=dp)                               :: dd
 
-        num_frames = size(msd_vec, dim=1)
         n_p = size(pos, dim=2)
         msd_vec = 0.0_dp
 
-        do i_frame = 2, num_frames
-            do j_part = 1, n_p
-                dd = norm2(pos(i_frame, j_part, :) - pos(1, j_part, :)) ** 2
-                msd_vec(i_frame) = msd_vec(i_frame) + dd
-            end do
-            msd_vec(i_frame) = msd_vec(i_frame) / real(n_p, kind=dp)
+        do j_part = 1, n_p
+            dd = norm2(pos(j_part, :) - init_pos) ** 2
+            msd_vec = msd_vec + dd
         end do
+        msd_vec = msd_vec / real(n_p, kind=dp)
 
     end subroutine calc_msd
 
