@@ -41,4 +41,4 @@ writers_mod.o: writers_mod.F90
 
 .PHONY: clean
 clean:
-	rm *.o *.mod
+	rm *.o

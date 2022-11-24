@@ -1,18 +1,14 @@
-#define MASS 1.0_DP
-#define TIMESTEP 0.0001_DP
-#define CUTOFF_SET 2.5_DP
-
 module integrtors_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
     use            :: therm_m, only: pbc, calc_vdw_force
 
 contains
 
-    subroutine velocity_verlet(pos, vel, dt, boundary)
+    subroutine velocity_verlet(pos, vel, dt, boundary, mass, cutoff)
         implicit none
         ! In/Out variables
         real(kind=DP), intent(inout), dimension(:,:) :: pos, vel
-        real(kind=DP), intent(in)                    :: dt, boundary
+        real(kind=DP), intent(in)                    :: dt, boundary, mass, cutoff
         ! Internal_variables
         integer(kind=I64)                             :: n_p, idx_
         real(kind=DP), dimension(:, :), allocatable   :: actual_force, new_force
@@ -23,9 +19,9 @@ contains
         allocate(new_force(n_p, 3))
 
         ! Calculem forces a r(t)
-        call calc_vdw_force(pos=pos, cutoff=CUTOFF_SET, forces=actual_force, boundary=boundary)
+        call calc_vdw_force(pos=pos, cutoff=cutoff, forces=actual_force, boundary=boundary)
 
-        pos = pos + (vel*dt) + ((actual_force/(2.0_DP * MASS)) * (dt ** 2))
+        pos = pos + (vel*dt) + ((actual_force/(2.0_DP * mass)) * (dt ** 2))
 
         ! Apliquem pbcs
         do idx_ = 1, n_p
@@ -33,19 +29,19 @@ contains
         end do
 
         ! Calculem forces a r(t+dt)
-        call calc_vdw_force(pos=pos, cutoff=CUTOFF_SET, forces=new_force, boundary=boundary)
-        vel = vel + (((actual_force + new_force) / (2.0_DP * MASS)) * dt)
+        call calc_vdw_force(pos=pos, cutoff=cutoff, forces=new_force, boundary=boundary)
+        vel = vel + (((actual_force + new_force) / (2.0_DP * mass)) * dt)
 
         deallocate(actual_force)
         deallocate(new_force)
     end subroutine velocity_verlet
 
-    subroutine euler_integrator(pos, new_pos, vel, new_vel, boundary, dt, forc)
+    subroutine euler_integrator(pos, new_pos, vel, new_vel, boundary, dt, forc, mass)
         implicit none
         ! In/Out variables
         real(kind=DP), intent(in), dimension(:,:)    :: pos, vel, forc
         real(kind=DP), intent(out), dimension(:,:)   :: new_pos, new_vel
-        real(kind=DP), intent(in)                    :: boundary, dt
+        real(kind=DP), intent(in)                    :: boundary, dt, mass
         ! Function variables
         integer(kind=I64)                           :: n_p, i
 
@@ -57,7 +53,7 @@ contains
             call pbc(new_pos(i, :), boundary)
         end do
 
-        new_vel = vel + ((forc/MASS) * dt)
+        new_vel = vel + ((forc/mass) * dt)
 
     end subroutine euler_integrator
 

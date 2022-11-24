@@ -1,7 +1,3 @@
-#define MASS 1.0_DP
-#define TIMESTEP 0.0001_DP
-#define CUTOFF_SET 2.5_DP
-
 module init_cond_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
     implicit none
