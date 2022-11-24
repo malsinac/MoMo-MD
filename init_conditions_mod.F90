@@ -6,13 +6,13 @@ module init_cond_m
 
 contains
 
-    pure subroutine bimodal_dist_velocities(vel, temp)
+    subroutine bimodal_dist_velocities(vel, temp, mass)
         implicit none
         ! In/Out variables
         real(kind=dp), dimension(:,:), intent(inout) :: vel
-        real(kind=dp), intent(in)                    :: temp
+        real(kind=dp), intent(in)                    :: temp, mass
         ! Internal variables
-        real(kind=dp)                                :: sqrt_temp, u_num
+        real(kind=dp)                                :: sqrt_temp, total_mass
         integer(kind=i64)                            :: i_pos, j_dim, n_p, mid_idx, k_counter
         real(kind=dp), dimension(3)                  :: v_cm
 
@@ -20,8 +20,9 @@ contains
         n_p = size(vel, dim=1)
         sqrt_temp = sqrt(temp)
         mid_idx = ceiling(real(n_p, kind=dp) * 3.0_dp / 2.0_dp, kind=i64)
-        k_counter = 0_i64
+        k_counter = 1_i64
         v_cm = 0.0_dp
+        total_mass = 0.0_dp
 
         ! Assignem velocitats a les particules
         do i_pos = 1, n_p
@@ -40,7 +41,10 @@ contains
             v_cm(1) = v_cm(1) + vel(i_pos, 1)
             v_cm(2) = v_cm(2) + vel(i_pos, 2)
             v_cm(3) = v_cm(3) + vel(i_pos, 3)
+            total_mass = total_mass + mass
         end do
+
+        v_cm = v_cm / total_mass
 
         ! Restem la velocitat de centre de masses a totes les velocitats perque aquesta sigui 0
         do i_pos = 1, n_p

@@ -2,9 +2,9 @@ MAKEFLAGS+="-j 4"
 
 FC=gfortran
 
-EFLAGS=-pedantic -Wall -Wextra -Wdo-subscript -Waliasing -Warray-temporaries -Winteger-division -Wsurprising -Wuse-without-only # Error flags
+EFLAGS=-pedantic -Wall -Wextra -Wdo-subscript -Waliasing -Winteger-division -Wsurprising -Wuse-without-only # Error flags
 FFLAGS=-ffree-line-length-none -ffree-form -std=gnu # Fortran-language flags
-DFLAGS=-g -fbounds-check -ffpe-trap=invalid,zero,overflow,underflow,denormal # Debugging flags
+DFLAGS=-g -fcheck=all,no-array-temps -ffpe-trap=invalid,zero,overflow,underflow,denormal # Debugging flags
 PFLAGS=-march=native -Og # Performance flags
 
 

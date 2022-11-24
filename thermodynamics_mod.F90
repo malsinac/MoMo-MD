@@ -2,7 +2,7 @@ module therm_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
     implicit none
 
-    public :: calc_pressure, calc_KE, calc_vdw_pbc, pbc, calc_vdw_force
+    public :: calc_pressure, calc_KE, calc_vdw_pbc, pbc, calc_vdw_force, compute_com_momenta
 
 contains
 
@@ -176,5 +176,24 @@ contains
             end if
         end do
     end subroutine pbc
+
+    pure subroutine compute_com_momenta(vel, com_momenta, mass)
+        implicit none
+        ! In/Out variables
+        real(kind=DP), dimension(:, :), intent(in) :: vel
+        real(kind=DP), dimension(3), intent(out)   :: com_momenta
+        real(kind=dp), intent(in)                  :: mass
+        ! Internal variables
+        integer(kind=I64)                          :: i_aux, n_p
+
+        com_momenta = 0.0_DP
+        n_p = size(vel, dim=1, kind=I64)
+
+        do i_aux = 1, n_p
+            com_momenta(1) = com_momenta(1) + (mass * vel(i_aux,1))
+            com_momenta(2) = com_momenta(2) + (mass * vel(i_aux,2))
+            com_momenta(3) = com_momenta(3) + (mass * vel(i_aux,3))
+        end do
+    end subroutine compute_com_momenta
 
 end module therm_m
