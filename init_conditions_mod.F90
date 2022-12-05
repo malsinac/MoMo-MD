@@ -72,13 +72,11 @@ contains
         print '(A)', ""
         print '(A,I3,A,I3,A,F12.8,A,F12.8)', "sc lattice, parameters: N=", N, " M=", M, " L=", L, " a=", a
 
-        p = 1
         do i = 0, M - 1
             do j = 0, M - 1
                 do k = 0, M - 1
-                    ! p = (k+1) + (j*M) + (i * (M**2))
-                    pos(p, :) = [real(i, kind=DP)*a + a*0.5_DP, real(j, kind=DP)*a + a*0.5_DP, real(k, kind=DP)*a + a*0.5_DP]
-                    p = p + 1
+                    p = (k+1) + (j*M) + (i * (M**2))
+                    pos(p, :) = [real(i, kind=DP)*a, real(j, kind=DP)*a, real(k, kind=DP)*a]
                 end do
             end do
         end do

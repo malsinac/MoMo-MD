@@ -1,36 +1,56 @@
 module integrtors_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
-    use            :: therm_m, only: pbc, calc_vdw_force
+    use            :: therm_m,         only: pbc, calc_vdw_force
+    use            :: writers_m,       only: write_system_information
+    use            :: interface_m,     only: thermostat_func, databloc_params_t
+    use            :: thermostats_m,   only: null_thermostat 
 
 contains
 
-    subroutine velocity_verlet(pos, vel, dt, boundary, mass, cutoff)
+    subroutine velocity_verlet(pos, vel, parambox, log_unit, therm_ptr)
         implicit none
         ! In/Out variables
-        real(kind=DP), intent(inout), dimension(:,:) :: pos, vel
-        real(kind=DP), intent(in)                    :: dt, boundary, mass, cutoff
+        real(kind=dp), intent(inout), dimension(:,:)     :: pos, vel
+        type(databloc_params_t), intent(in)             :: parambox
+        integer(kind=i64), intent(in)                   :: log_unit
+        procedure(thermostat_func), pointer             :: therm_ptr
         ! Internal_variables
-        integer(kind=I64)                             :: n_p, idx_
-        real(kind=DP), dimension(:, :), allocatable   :: actual_force, new_force
+        integer(kind=I64)                               :: idx_, stp
+        real(kind=DP), dimension(:, :), allocatable     :: actual_force, new_force
 
-        n_p = size(pos, dim=1, kind=I64)
+        allocate(actual_force(parambox%n_particles, 3))
+        allocate(new_force(parambox%n_particles, 3))
 
-        allocate(actual_force(n_p, 3))
-        allocate(new_force(n_p, 3))
-
-        ! Calculem forces a r(t)
-        call calc_vdw_force(pos=pos, cutoff=cutoff, forces=actual_force, boundary=boundary)
-
-        pos = pos + (vel*dt) + ((actual_force/(2.0_DP * mass)) * (dt ** 2))
-
-        ! Apliquem pbcs
-        do idx_ = 1, n_p
-            call pbc(pos(idx_, :), boundary)
+        ! Posem tot abans a la caixa unitaria
+        do idx_ = 1, parambox%n_particles
+            call pbc(pos(idx_, :), parambox%box)
         end do
 
-        ! Calculem forces a r(t+dt)
-        call calc_vdw_force(pos=pos, cutoff=cutoff, forces=new_force, boundary=boundary)
-        vel = vel + (((actual_force + new_force) / (2.0_DP * mass)) * dt)
+        do stp = 1, parambox%n_steps
+
+            ! Calculem forces a r(t)
+            call calc_vdw_force(pos=pos, cutoff=parambox%cutoff_set, forces=actual_force, boundary=parambox%box)
+
+            pos = pos + (vel*parambox%timestep) + ((actual_force/(2.0_DP * parambox%mass)) * (parambox%timestep ** 2))
+
+            ! Apliquem pbcs
+            do idx_ = 1, parambox%n_particles
+                call pbc(pos(idx_, :), parambox%box)
+            end do
+
+            ! Calculem forces a r(t+dt)
+            call calc_vdw_force(pos=pos, cutoff=parambox%cutoff_set, forces=new_force, boundary=parambox%box)
+            vel = vel + (((actual_force + new_force) / (2.0_DP * parambox%mass)) * parambox%timestep)
+
+            ! Apliquem el thermostat
+            ! call null_thermostat(vel, parambox)
+
+            if (mod(stp, parambox%write_file) == 0_i64) then
+                call write_system_information(pos=pos, vel=vel,cutoff=parambox%cutoff_set, frame=stp, unit=log_unit, &
+                                              boundary=parambox%box, mass=parambox%mass, dens=parambox%density)
+            end if
+
+        end do
 
         deallocate(actual_force)
         deallocate(new_force)

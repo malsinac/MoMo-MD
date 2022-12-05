@@ -11,13 +11,14 @@ contains
         ! In/Out variables
         real(kind=dp), dimension(:,:), intent(in) :: positions
         real(kind=dp), intent(in)                 :: dens, lenth, temp, cutoff
-        real(kind=dp)                             :: press
+        real(kind=dp)                             :: press, virial
         ! Internal variables
         integer(kind=i64)                         :: i_part, j_part, n_p
         real(kind=dp), dimension(3)               :: rij, fij
         real(kind=dp)                             :: dij
 
         press = 0.0_dp
+        virial = 0.0_dp
         n_p = size(positions, dim=1, kind=i64)
 
         do i_part = 1, n_p
@@ -35,16 +36,16 @@ contains
 
                 if (cutoff > dij) cycle
 
-                fij(1) = (48.0_dp / dij**14.0_dp - 24.0_dp /dij**8)*rij(1)
-                fij(2) = (48.0_dp / dij**14.0_dp - 24.0_dp /dij**8)*rij(2)
-                fij(3) = (48.0_dp / dij**14.0_dp - 24.0_dp /dij**8)*rij(3)
+                fij(1) = (48.0_dp / dij**14.0_dp - 24.0_dp /dij**8) * rij(1)
+                fij(2) = (48.0_dp / dij**14.0_dp - 24.0_dp /dij**8) * rij(2)
+                fij(3) = (48.0_dp / dij**14.0_dp - 24.0_dp /dij**8) * rij(3)
 
-                ! Upgredagem el valor de la pressió
-                press = press + (dot_product(rij, fij))
+                ! Upgredagem el valor de la pressio
+                virial = virial + (dot_product(rij, fij))
 
             end do
         end do
-        press = (press*dens*temp) + (1.0_dp / (3.0_dp * (lenth**3)))
+        press = (dens*temp) + ((1.0_dp/(lenth**3))*virial)
     end function calc_pressure
 
     pure function calc_KE(vel) result(ke)
@@ -95,7 +96,7 @@ contains
 
                 dist = norm2(rij) ** 2
 
-                if (dist < cutoff2) then
+                if (dist <= cutoff2) then
                     
                     dist = dist ** 3
                     
@@ -122,8 +123,6 @@ contains
 
         n_part = size(pos, dim=1, kind=I64)
 
-        if (size(forces, dim=1, kind=I64) /= n_part) stop 1
-
         forces = 0.0_DP
         rij = 0
 
@@ -137,8 +136,9 @@ contains
                 call pbc(x=rij, l_=boundary)
                 
                 dist = norm2(rij)
-                if (dist < cutoff) then
-                    ! Calculem la força entre particula i i j
+                
+                if (dist <= cutoff) then
+                    ! Calculem la forc entre particula i, j
 
                     forces(i, 1) = forces(i, 1) + (48.0_DP / dist**14 - 24 / dist**8) * rij(1)
                     forces(i, 2) = forces(i, 2) + (48.0_DP / dist**14 - 24 / dist**8) * rij(2)

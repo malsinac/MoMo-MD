@@ -4,14 +4,14 @@ FC=gfortran
 
 EFLAGS=-pedantic -Wall -Wextra -Wdo-subscript -Waliasing -Winteger-division -Wsurprising -Wuse-without-only # Error flags
 FFLAGS=-ffree-line-length-none -ffree-form -std=gnu # Fortran-language flags
-DFLAGS=-g -fcheck=all,no-array-temps -ffpe-trap=invalid,zero,overflow,underflow,denormal # Debugging flags
+DFLAGS=-g -fcheck=all,no-array-temps -ffpe-trap=invalid,zero,overflow,underflow,denormal -Wrealloc-lhs # Debugging flags
 PFLAGS=-march=native -Og # Performance flags
 
 
 all: main.x
 
 # ~~ LINKING ~~
-main.x: main.o analysis_m.o init_conditions_mod.o integrators_mod.o mathutils_m.o thermodynamics_mod.o thermostats_m.o writers_mod.o
+main.x: main.o analysis_m.o init_conditions_mod.o integrators_mod.o mathutils_m.o thermodynamics_mod.o thermostats_m.o writers_mod.o interfaces_m.o
 	$(FC) $(EFLAGS) $(FFLAGS) $(DFLAGS) $(PFLAGS) $^ -o $@
 
 # ~~ COMPILING ~~
@@ -37,6 +37,9 @@ thermostats_m.o: thermostats_m.F90
 	$(FC) $(EFLAGS) $(FFLAGS) $(DFLAGS) $(PFLAGS) -c $^
 
 writers_mod.o: writers_mod.F90
+	$(FC) $(EFLAGS) $(FFLAGS) $(DFLAGS) $(PFLAGS) -c $^
+
+interfaces_m.o: interfaces_m.f90
 	$(FC) $(EFLAGS) $(FFLAGS) $(DFLAGS) $(PFLAGS) -c $^
 
 .PHONY: clean
