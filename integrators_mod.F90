@@ -26,11 +26,11 @@ contains
             call pbc(pos(idx_, :), parambox%box)
         end do
 
+        call calc_vdw_force(pos=pos, cutoff=parambox%cutoff_set, forces=actual_force, boundary=parambox%box)
         do stp = 1, parambox%n_steps
 
             ! Calculem forces a r(t)
-            call calc_vdw_force(pos=pos, cutoff=parambox%cutoff_set, forces=actual_force, boundary=parambox%box)
-
+            
             pos = pos + (vel*parambox%timestep) + ((actual_force/(2.0_DP * parambox%mass)) * (parambox%timestep ** 2))
 
             ! Apliquem pbcs
@@ -50,6 +50,8 @@ contains
                                               boundary=parambox%box, mass=parambox%mass, dens=parambox%density)
             end if
 
+            ! Swapping de matrius
+            actual_force = new_force
         end do
 
         deallocate(actual_force)

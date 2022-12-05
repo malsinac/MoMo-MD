@@ -33,13 +33,13 @@ program main
     datablock%timestep = 0.0001_dp
     datablock%cutoff_set = 2.5_dp
     datablock%write_file = 4_I64
-    datablock%n_particles = 216_I64
+    datablock%n_particles = 125_I64
     datablock%density = 0.7_DP
     datablock%n_steps = 100000_I64
     datablock%box = (real(datablock%n_particles, kind=DP)/datablock%density) ** (1.0_DP / 3.0_DP)
     datablock%ref_temp = 100_dp
     thermostat_ptr => null_thermostat
-    ! integrator_ptr => velocity_verlet
+    integrator_ptr => velocity_verlet
 
     ! ~ Inicialitzem les posicions i velocitats~
     allocate(positions(datablock%n_particles, 3), velocities(datablock%n_particles, 3))

@@ -15,10 +15,11 @@ contains
         ! Internal variables
         integer(kind=i64)                         :: i_part, j_part, n_p
         real(kind=dp), dimension(3)               :: rij, fij
-        real(kind=dp)                             :: dij
+        real(kind=dp)                             :: dij, cutoff2
 
         press = 0.0_dp
         virial = 0.0_dp
+        cutoff2 = cutoff ** 2
         n_p = size(positions, dim=1, kind=i64)
 
         do i_part = 1, n_p
@@ -32,13 +33,13 @@ contains
                 call pbc(rij, lenth)
                 
                 ! Calculem fij
-                dij = norm2(rij)
+                dij = (rij(1)**2) + (rij(2)**2) + (rij(3)**2)
 
-                if (cutoff > dij) cycle
+                if (cutoff2 > dij) cycle
 
-                fij(1) = (48.0_dp / dij**14.0_dp - 24.0_dp /dij**8) * rij(1)
-                fij(2) = (48.0_dp / dij**14.0_dp - 24.0_dp /dij**8) * rij(2)
-                fij(3) = (48.0_dp / dij**14.0_dp - 24.0_dp /dij**8) * rij(3)
+                fij(1) = (48.0_dp / dij**7 - 24.0_dp /dij**4) * rij(1)
+                fij(2) = (48.0_dp / dij**7 - 24.0_dp /dij**4) * rij(2)
+                fij(3) = (48.0_dp / dij**7 - 24.0_dp /dij**4) * rij(3)
 
                 ! Upgredagem el valor de la pressio
                 virial = virial + (dot_product(rij, fij))
@@ -94,7 +95,7 @@ contains
                 
                 call pbc(x=rij, l_=boundary)
 
-                dist = norm2(rij) ** 2
+                dist = (rij(1)**2) + (rij(2)**2) + (rij(3)**2)
 
                 if (dist <= cutoff2) then
                     
@@ -117,14 +118,15 @@ contains
         real(kind=DP), intent(in)                     :: cutoff, boundary
         real(kind=DP), intent(inout), dimension(:, :) :: forces
         ! Internal variables
-        integer(kind=I64) :: n_part, i, j
-        real(kind=DP)     :: dist
+        integer(kind=I64)           :: n_part, i, j
+        real(kind=DP)               :: dist, cutoff2
         real(kind=DP), dimension(3) :: rij
 
         n_part = size(pos, dim=1, kind=I64)
 
         forces = 0.0_DP
-        rij = 0
+        rij = 0.0_dp
+        cutoff2 = cutoff ** 2
 
         do i = 1, n_part
             do j = i+1, n_part
@@ -135,18 +137,18 @@ contains
                 
                 call pbc(x=rij, l_=boundary)
                 
-                dist = norm2(rij)
+                dist = (rij(1)**2) + (rij(2)**2) + (rij(3)**2)
                 
-                if (dist <= cutoff) then
+                if (dist <= cutoff2) then
                     ! Calculem la forc entre particula i, j
 
-                    forces(i, 1) = forces(i, 1) + (48.0_DP / dist**14 - 24 / dist**8) * rij(1)
-                    forces(i, 2) = forces(i, 2) + (48.0_DP / dist**14 - 24 / dist**8) * rij(2)
-                    forces(i, 3) = forces(i, 3) + (48.0_DP / dist**14 - 24 / dist**8) * rij(3)
+                    forces(i, 1) = forces(i, 1) + (48.0_DP / dist**7 - 24 / dist**4) * rij(1)
+                    forces(i, 2) = forces(i, 2) + (48.0_DP / dist**7 - 24 / dist**4) * rij(2)
+                    forces(i, 3) = forces(i, 3) + (48.0_DP / dist**7 - 24 / dist**4) * rij(3)
 
-                    forces(j, 1) = forces(j, 1) - (48.0_DP / dist**14 - 24 / dist**8) * rij(1)
-                    forces(j, 2) = forces(j, 2) - (48.0_DP / dist**14 - 24 / dist**8) * rij(2)
-                    forces(j, 3) = forces(j, 3) - (48.0_DP / dist**14 - 24 / dist**8) * rij(3)
+                    forces(j, 1) = forces(j, 1) - (48.0_DP / dist**7 - 24 / dist**4) * rij(1)
+                    forces(j, 2) = forces(j, 2) - (48.0_DP / dist**7 - 24 / dist**4) * rij(2)
+                    forces(j, 3) = forces(j, 3) - (48.0_DP / dist**7 - 24 / dist**4) * rij(3)
                 end if
             end do
         end do
