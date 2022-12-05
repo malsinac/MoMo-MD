@@ -7,16 +7,15 @@ module integrtors_m
 
 contains
 
-    subroutine velocity_verlet(pos, vel, parambox, log_unit, therm_ptr)
+    subroutine velocity_verlet(pos, vel, parambox, log_unit)
         implicit none
         ! In/Out variables
-        real(kind=dp), intent(inout), dimension(:,:)     :: pos, vel
-        type(databloc_params_t), intent(in)             :: parambox
-        integer(kind=i64), intent(in)                   :: log_unit
-        procedure(thermostat_func), pointer             :: therm_ptr
+        real(kind=dp), intent(inout), dimension(:,:)  :: pos, vel
+        type(databloc_params_t), intent(in)           :: parambox
+        integer(kind=i64), intent(in)                 :: log_unit
         ! Internal_variables
-        integer(kind=I64)                               :: idx_, stp
-        real(kind=DP), dimension(:, :), allocatable     :: actual_force, new_force
+        integer(kind=I64)                             :: idx_, stp
+        real(kind=DP), dimension(:, :), allocatable   :: actual_force, new_force
 
         allocate(actual_force(parambox%n_particles, 3))
         allocate(new_force(parambox%n_particles, 3))
@@ -29,8 +28,7 @@ contains
         call calc_vdw_force(pos=pos, cutoff=parambox%cutoff_set, forces=actual_force, boundary=parambox%box)
         do stp = 1, parambox%n_steps
 
-            ! Calculem forces a r(t)
-            
+            ! Calculem r(t)
             pos = pos + (vel*parambox%timestep) + ((actual_force/(2.0_DP * parambox%mass)) * (parambox%timestep ** 2))
 
             ! Apliquem pbcs
@@ -58,24 +56,48 @@ contains
         deallocate(new_force)
     end subroutine velocity_verlet
 
-    subroutine euler_integrator(pos, new_pos, vel, new_vel, boundary, dt, forc, mass)
+    subroutine euler_integrator(pos, vel, parambox, log_unit)
         implicit none
         ! In/Out variables
-        real(kind=DP), intent(in), dimension(:,:)    :: pos, vel, forc
-        real(kind=DP), intent(out), dimension(:,:)   :: new_pos, new_vel
-        real(kind=DP), intent(in)                    :: boundary, dt, mass
+        real(kind=DP), intent(inout), dimension(:,:) :: pos, vel
+        type(databloc_params_t), intent(in)          :: parambox
+        integer(kind=i64), intent(in)                :: log_unit
         ! Function variables
-        integer(kind=I64)                           :: n_p, i
+        integer(kind=I64)                            :: idx_, stp
+        real(kind=DP), dimension(:, :), allocatable  :: actual_force
 
-        n_p = size(pos, dim=1, kind=I64)
-        
-        ! Update positions
-        new_pos = pos + (vel * dt) + (0.5_DP * forc * dt * dt)
-        do i = 1, n_p
-            call pbc(new_pos(i, :), boundary)
+        allocate(actual_force(parambox%n_particles, 3))
+
+
+        ! Posem tot abans a la caixa unitaria
+        do idx_ = 1, parambox%n_particles
+            call pbc(pos(idx_, :), parambox%box)
         end do
 
-        new_vel = vel + ((forc/mass) * dt)
+        do stp = 1, parambox%n_steps
+            
+            ! Compute forces
+            call calc_vdw_force(pos=pos, cutoff=parambox%cutoff_set, forces=actual_force, boundary=parambox%box)
+        
+            ! Update positions
+            pos = pos + (vel * parambox%timestep) + (0.5_DP * actual_force * (parambox%timestep**2))
+            
+            ! Apliquem pbcs
+            do idx_ = 1, parambox%n_particles
+                call pbc(pos(idx_, :), parambox%box)
+            end do
+            
+            vel = vel + ((actual_force/parambox%mass) * parambox%timestep)
+        
+            ! Escribim al output
+            if (mod(stp, parambox%write_file) == 0_i64) then
+                call write_system_information(pos=pos, vel=vel,cutoff=parambox%cutoff_set, frame=stp, unit=log_unit, &
+                                              boundary=parambox%box, mass=parambox%mass, dens=parambox%density)
+            end if
+
+        end do
+
+        deallocate(actual_force)
 
     end subroutine euler_integrator
 
