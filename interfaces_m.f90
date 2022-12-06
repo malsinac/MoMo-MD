@@ -4,20 +4,21 @@ module interface_m
 
     type :: databloc_params_t
         ! Particle-related variables
-        real(kind=dp)     :: mass
+        real(kind=dp)       :: mass
         ! Simulation-related variables
-        real(kind=dp)     :: timestep
-        real(kind=dp)     :: cutoff_set
-        integer(kind=i64) :: n_particles
-        real(kind=dp)     :: density
-        integer(kind=i64) :: n_steps
+        real(kind=dp)       :: timestep
+        real(kind=dp)       :: cutoff_set
+        integer(kind=i64)   :: n_particles
+        real(kind=dp)       :: density
+        integer(kind=i64)   :: n_steps
         ! I/O variables
-        integer(kind=i64) :: write_file
+        integer(kind=i64)   :: write_file
         ! Thermostat variables
-        real(kind=dp)     :: ref_temp
-        real(kind=dp)     :: andersen_nu
+        real(kind=dp)       :: ref_temp
+        real(kind=dp)       :: andersen_nu
         ! Simulation-dependent variables
-        real(kind=dp)     :: box
+        real(kind=dp)       :: box
+        character(len=2048) :: sim_name
     end type
 
     abstract interface

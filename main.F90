@@ -11,9 +11,11 @@ program main
 
     ! Derived types
     type(databloc_params_t) :: datablock
+    
     ! Scalar values 
     real(kind=DP)       :: time0, time1
     integer(kind=I64)   :: stp, log_unit, vel_unit
+    character(len=2048) :: vel_name, log_name
 
     ! Arrays
     real(kind=DP), allocatable, dimension(:, :) :: positions, velocities
@@ -22,24 +24,29 @@ program main
     procedure(thermostat_func), pointer :: thermostat_ptr => null()
     procedure(integrator_func), pointer :: integrator_ptr => null()
 
-    ! Files
-    open(newunit=log_unit, file="part1.log", access='sequential', action='write',&
-    status='replace', form='formatted')
-    open(newunit=vel_unit, file="part1_vel.log", access='sequential', action='write',&
-    status='replace', form='formatted')
-
+    
     ! ~ Definim parametres ~
     datablock%mass = 1.0_dp
-    datablock%timestep = 0.00001_dp
+    datablock%timestep = 0.1_dp
+    datablock%sim_name = "vverlet_0-1"
     datablock%cutoff_set = 2.5_dp
     datablock%write_file = 4_I64
-    datablock%n_particles = 125_I64
+    datablock%n_particles = 216_I64
     datablock%density = 0.7_DP
     datablock%n_steps = 100000_I64
     datablock%box = (real(datablock%n_particles, kind=DP)/datablock%density) ** (1.0_DP / 3.0_DP)
     datablock%ref_temp = 100_dp
     !thermostat_ptr => null_thermostat
     !integrator_ptr => velocity_verlet
+
+    log_name = trim(datablock%sim_name) // ".log"
+    vel_name = trim(datablock%sim_name) // ".vel"
+
+    ! Files
+    open(newunit=log_unit, file=trim(log_name), access='sequential', action='write',&
+    status='replace', form='formatted')
+    open(newunit=vel_unit, file=trim(vel_name), access='sequential', action='write',&
+    status='replace', form='formatted')
 
     ! ~ Inicialitzem les posicions i velocitats~
     allocate(positions(datablock%n_particles, 3), velocities(datablock%n_particles, 3))
@@ -54,7 +61,7 @@ program main
     call cpu_time(time0)
 
     ! ~ Integrem les posicions dels atoms ~
-    call euler_integrator(vel=velocities, pos=positions, parambox=datablock, &
+    call velocity_verlet(vel=velocities, pos=positions, parambox=datablock, &
                          log_unit=log_unit)
 
     call cpu_time(time1)
