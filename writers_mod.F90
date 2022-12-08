@@ -31,7 +31,7 @@ contains
         real(kind=dp), intent(in)                 :: cutoff, boundary, mass, dens
         integer(kind=i64), intent(in)             :: frame, unit
         ! Internal variables
-        real(kind=dp)                 :: pe_calc, ke_calc, temper, com_vel_mod, calc_press
+        real(kind=dp)                 :: pe_calc, ke_calc, temper, com_vel_mod, calc_press, time
         real(kind=dp), dimension(3)   :: com_vector
         integer(kind=i64)             :: n_p
 
@@ -43,8 +43,9 @@ contains
         call compute_com_momenta(vel=vel, com_momenta=com_vector, mass=mass)
         com_vel_mod = norm2(com_vector)
         calc_press = calc_pressure(dens=dens, lenth=boundary, positions=pos, temp=temper, cutoff=cutoff)
+        ! time = real(frame, kind=dp) * 
 
-        write(unit=unit, fmt='(A,I6,A,F14.6,A,F14.6,A,F14.6,A,F14.6,A,F14.6,A,F14.6)') "frame: ", frame, " KE=", ke_calc, " PE=", pe_calc, &
+        write(unit=unit, fmt='(A,I6,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4)') "t: ", frame, " KE=", ke_calc, " PE=", pe_calc, &
         " H=",ke_calc+pe_calc, " T=", temper, " P=", calc_press, " COM mod=", com_vel_mod
 
     end subroutine write_system_information
@@ -65,6 +66,10 @@ contains
         end do
 
     end subroutine write_velocities
+
+    !subroutine write_rdf()
+
+    !end subroutine write_rdf
 
 
 

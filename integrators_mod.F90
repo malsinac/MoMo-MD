@@ -2,17 +2,18 @@ module integrtors_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
     use            :: therm_m,         only: pbc, calc_vdw_force
     use            :: writers_m,       only: write_system_information
-    use            :: interface_m,     only: thermostat_func, databloc_params_t
-    use            :: thermostats_m,   only: null_thermostat 
+    use            :: interface_m,     only: databloc_params_t
+    use            :: thermostats_m,   only: andersen_thermostat
 
 contains
 
-    subroutine velocity_verlet(pos, vel, parambox, log_unit)
+    subroutine velocity_verlet(pos, vel, parambox, log_unit, rdf_unit)
         implicit none
         ! In/Out variables
         real(kind=dp), intent(inout), dimension(:,:)  :: pos, vel
         type(databloc_params_t), intent(in)           :: parambox
         integer(kind=i64), intent(in)                 :: log_unit
+        integer(kind=i64), intent(in), optional       :: rdf_unit
         ! Internal_variables
         integer(kind=I64)                             :: idx_, stp
         real(kind=DP), dimension(:, :), allocatable   :: actual_force, new_force
@@ -41,12 +42,18 @@ contains
             vel = vel + (((actual_force + new_force) / (2.0_DP * parambox%mass)) * parambox%timestep)
 
             ! Apliquem el thermostat
-            ! call null_thermostat(vel, parambox)
+            ! call andersen_thermostat(vel, parambox)
 
+            ! We write information of the system to the log unit
             if (mod(stp, parambox%write_file) == 0_i64) then
                 call write_system_information(pos=pos, vel=vel,cutoff=parambox%cutoff_set, frame=stp, unit=log_unit, &
                                               boundary=parambox%box, mass=parambox%mass, dens=parambox%density)
             end if
+
+            !if (present(rdf_unit)) then
+            !    if (mod(stp, parambox%write_stats) == 0) then
+            !        print*, 'RDF'
+            !end if
 
             ! Swapping de matrius
             actual_force = new_force

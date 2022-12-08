@@ -187,15 +187,21 @@ contains
         real(kind=dp), intent(in)                  :: mass
         ! Internal variables
         integer(kind=I64)                          :: i_aux, n_p
+        real(kind=dp)                              :: total_mass
 
         com_momenta = 0.0_DP
+        total_mass = 0.0_dp
         n_p = size(vel, dim=1, kind=I64)
 
         do i_aux = 1, n_p
-            com_momenta(1) = com_momenta(1) + (mass * vel(i_aux,1))
-            com_momenta(2) = com_momenta(2) + (mass * vel(i_aux,2))
-            com_momenta(3) = com_momenta(3) + (mass * vel(i_aux,3))
+            com_momenta(1) = com_momenta(1) + vel(i_aux,1)
+            com_momenta(2) = com_momenta(2) + vel(i_aux,2)
+            com_momenta(3) = com_momenta(3) + vel(i_aux,3)
+            total_mass = total_mass + mass
         end do
+
+        com_momenta = com_momenta / total_mass
+
     end subroutine compute_com_momenta
 
 end module therm_m

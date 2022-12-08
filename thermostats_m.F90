@@ -29,10 +29,4 @@ subroutine andersen_thermostat(vel, parambox)
     end do 
 end subroutine andersen_thermostat
 
-subroutine null_thermostat(vel, parambox)
-    implicit none
-    real(kind=dp), dimension(:, :), intent(inout) :: vel
-    type(databloc_params_t), intent(in)           :: parambox
-end subroutine null_thermostat
-
 end module thermostats_m
