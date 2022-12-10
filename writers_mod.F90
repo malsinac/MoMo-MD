@@ -82,8 +82,8 @@ contains
 
         allocate(gdr_mat(2, parambox%gdr_num_bins))
 
-        call g_r(gr_mat=gdr_mat, dens=parambox%density, pos=pos,&
-        max_dist=parambox%gdr_max_dist, box=parambox%box)
+        call g_r(gr_mat=gdr_mat, dens=parambox%density, pos=pos, &
+        parambox=parambox)
 
         if (stp == parambox%write_stats) then
             ! Write the distance binning
@@ -100,7 +100,6 @@ contains
 
 
         deallocate(gdr_mat)
-
     end subroutine write_rdf
 
 

@@ -160,14 +160,6 @@ contains
         real(kind=DP), intent(in)                  :: l_
         ! Internal variables
         integer(kind=I64) :: i_
-        
-        !do i_ = 1, 3
-        !    if (x( i_ ) > l_ ) then
-        !         x( i_ ) = x( i_ ) - l_
-        !    else if (x( i_ ) < 0.0_DP) then
-        !        x( i_ ) = x( i_ ) + l_
-        !    end if
-        !end do
 
         do i_ = 1, 3
             if (x(i_) > l_ / 2.0_DP) then

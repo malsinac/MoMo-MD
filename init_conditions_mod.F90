@@ -6,7 +6,7 @@ module init_cond_m
 
 contains
 
-    subroutine bimodal_dist_velocities(vel, temp, mass)
+    pure subroutine bimodal_dist_velocities(vel, temp, mass)
         implicit none
         ! In/Out variables
         real(kind=dp), dimension(:,:), intent(inout) :: vel

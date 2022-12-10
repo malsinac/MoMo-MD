@@ -27,23 +27,4 @@ module interface_m
         real(kind=dp)       :: gdr_max_dist
     end type
 
-
-
-    !abstract interface
-    !    subroutine integrator_func(vel, pos, parambox, log_unit, therm_ptr)
-    !        import :: databloc_params_t
-    !        real(kind=8), intent(inout), dimension(:,:)     :: pos, vel
-    !        integer(kind=8), intent(in)                     :: log_unit
-    !        procedure(thermostat_func), pointer             :: therm_ptr
-    !        type(databloc_params_t), intent(in)             :: parambox
-    !    end subroutine
-    !end interface
-
-    !abstract interface 
-    !    subroutine thermostat_func(vel, parambox)
-    !        import :: databloc_params_t
-    !        real(kind=8), dimension(:, :), intent(inout)    :: vel
-    !        type(databloc_params_t), intent(in)             :: parambox
-    !    end subroutine
-    !end interface
 end module interface_m

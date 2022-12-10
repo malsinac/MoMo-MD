@@ -28,10 +28,10 @@ program main
     datablock%lj_sigma = 3.4_dp
     datablock%mass = 1.0_dp
     ! Simulation related variables
-    datablock%timestep = 0.00001_dp
+    datablock%timestep = 0.001_dp
     datablock%cutoff_set = 2.5_dp
     datablock%n_particles = 125_I64
-    datablock%density = 0.7_DP
+    datablock%density = 0.5_DP
     datablock%n_steps = 100000_I64
     ! I/O variables
     datablock%write_file = 100_I64
@@ -43,8 +43,8 @@ program main
     ! Simulation-dependent variables
     datablock%box = (real(datablock%n_particles, kind=DP)/datablock%density) ** (1.0_DP / 3.0_DP)
     ! Analysis dependent variables
-    datablock%gdr_num_bins = 50_i64
-    datablock%gdr_max_dist = 8.0_dp
+    datablock%gdr_num_bins = 750_i64
+    datablock%gdr_max_dist = datablock%box * 0.75_dp
 
     ! ~ Realitzem l'equilibrat del sistema ~
 
@@ -111,7 +111,6 @@ program main
     call cpu_time(time1)
 
     print '(A,F12.8,A,F12.8)', "Execution time for production: ", time1 - time0, " time/iteration: ", (time1 - time0) / datablock%n_steps
-
 
     close(log_unit)
     close(vel_unit)
