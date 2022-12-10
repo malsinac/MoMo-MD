@@ -2,7 +2,7 @@ module writers_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
     use            :: therm_m,         only: calc_vdw_pbc, calc_KE, compute_com_momenta, calc_pressure
     use            :: interface_m,     only: databloc_params_t
-    use            :: analysis_m,      only: g_r
+    use            :: analysis_m,      only: g_r, calc_msd
     implicit none
 
     public :: write_frame, write_system_information, write_velocities
@@ -101,6 +101,21 @@ contains
 
         deallocate(gdr_mat)
     end subroutine write_rdf
+
+    subroutine write_msd(stp, parambox, pos, initpos, write_unit)
+        implicit none
+        ! In/Out variables
+        integer(kind=i64), intent(in)             :: stp, write_unit
+        type(databloc_params_t), intent(in)       :: parambox
+        real(kind=dp), dimension(:,:), intent(in) :: pos, initpos
+        ! Internal variables
+        real(kind=dp)                             :: msd_val
+
+        call calc_msd(msd_vec=msd_val, pos=pos, init_pos=initpos, box=parambox%box)
+
+        write(unit=write_unit, fmt='(I7,ES18.8e4)') stp, msd_val
+
+    end subroutine write_msd
 
 
 

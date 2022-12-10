@@ -1,7 +1,7 @@
 module integrtors_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
     use            :: therm_m,         only: pbc, calc_vdw_force
-    use            :: writers_m,       only: write_system_information, write_rdf
+    use            :: writers_m,       only: write_system_information, write_rdf, write_msd
     use            :: interface_m,     only: databloc_params_t
     use            :: thermostats_m,   only: andersen_thermostat
 
@@ -61,14 +61,17 @@ contains
 
             if (present_rdf) then
                 if (mod(stp, parambox%write_stats) == 0) then
-                    call write_rdf(stp=stp, parambox=parambox, pos=pos, write_unit=rdf_unit)
+                    call write_rdf(stp=stp, parambox=parambox, pos=pos, &
+                    write_unit=rdf_unit)
                 end if
             end if
 
-            !if (present(msd_unit)) then
-            !    if (mod(stp, parambox%write_stats) == 0) then
-            !        print *, 'MSD'
-            !end if
+            if (present_msd) then
+                if (mod(stp, parambox%write_stats) == 0) then
+                    call write_msd(stp=stp, parambox=parambox, pos=pos, initpos=init_pos,&
+                    write_unit=msd_unit)
+                end if
+            end if
 
             ! Swapping de matrius
             actual_force = new_force

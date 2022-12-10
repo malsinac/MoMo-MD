@@ -31,7 +31,7 @@ program main
     datablock%timestep = 0.001_dp
     datablock%cutoff_set = 2.5_dp
     datablock%n_particles = 125_I64
-    datablock%density = 0.5_DP
+    datablock%density = 0.7_DP
     datablock%n_steps = 100000_I64
     ! I/O variables
     datablock%write_file = 100_I64
@@ -100,7 +100,7 @@ program main
     status='replace', form='formatted')
     open(newunit=rdf_unit, file=trim(rdf_name), access='sequential', action='write',&
     status='replace', form='formatted')
-    open(newunit=msd_unit, file=trim(rdf_name), access='sequential', action='write',&
+    open(newunit=msd_unit, file=trim(msd_name), access='sequential', action='write',&
     status='replace', form='formatted')
     
     call cpu_time(time0)
