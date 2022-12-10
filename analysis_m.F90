@@ -1,12 +1,13 @@
 module analysis_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
+    use            :: therm_m,         only: pbc
     implicit none
 
     public :: g_r, calc_msd
 
 contains
 
-    subroutine g_r(gr_mat, dens, pos, max_dist)
+    subroutine g_r(gr_mat, dens, pos, max_dist, box)
         ! Notes
         ! gr_mat(2,:) on la segona dimensió es el numero de bins que faré
         ! gr_mat(1,:) -> valors de distancia
@@ -15,11 +16,12 @@ contains
         ! In/Out variables
         real(kind=dp), dimension(:,:), intent(inout) :: gr_mat
         real(kind=dp), dimension(:,:)                :: pos
-        real(kind=dp), intent(in)                    :: dens, max_dist
+        real(kind=dp), intent(in)                    :: dens, max_dist, box
         ! Internal variables
         integer(kind=i64)                            :: n_bins, i_ax, index_mat, j_ax, n_p
         real(kind=dp)                                :: dr, dist
         real(kind=dp), parameter                     :: PI = acos(-1.0_dp)
+        real(kind=dp), dimension(3)                  :: rij
 
         n_bins = size(gr_mat, dim=2, kind=i64)
         n_p = size(pos, dim=1, kind=i64)
@@ -30,9 +32,15 @@ contains
 
         ! Calculem n(r)
         do j_ax = 1, n_p
-            do i_ax = 2, n_p
-                dist = norm2(pos(j_ax,:) - pos(i_ax,:))
-                index_mat = ceiling(dist/dr)
+            do i_ax = j_ax + 1, n_p
+                ! Calculem rij
+                rij = pos(j_ax,:) - pos(i_ax,:)
+                call pbc(rij, box)
+                dist = norm2(rij)
+                
+                ! Apliquem el cutoff de maxima distancia
+                if (dist > max_dist) cycle
+                index_mat = int(dist/dr, kind=i64) + 1_i64
                 gr_mat(2, index_mat) = gr_mat(2, index_mat) + 1.0_dp
             end do
         end do

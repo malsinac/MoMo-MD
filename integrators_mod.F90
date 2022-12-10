@@ -1,25 +1,32 @@
 module integrtors_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
     use            :: therm_m,         only: pbc, calc_vdw_force
-    use            :: writers_m,       only: write_system_information
+    use            :: writers_m,       only: write_system_information, write_rdf
     use            :: interface_m,     only: databloc_params_t
     use            :: thermostats_m,   only: andersen_thermostat
 
 contains
 
-    subroutine velocity_verlet(pos, vel, parambox, log_unit, rdf_unit)
+    subroutine velocity_verlet(pos, vel, parambox, log_unit, rdf_unit, msd_unit, &
+        init_pos, thermost)
         implicit none
         ! In/Out variables
-        real(kind=dp), intent(inout), dimension(:,:)  :: pos, vel
-        type(databloc_params_t), intent(in)           :: parambox
-        integer(kind=i64), intent(in)                 :: log_unit
-        integer(kind=i64), intent(in), optional       :: rdf_unit
+        real(kind=dp), intent(inout), dimension(:,:)        :: pos, vel
+        type(databloc_params_t), intent(in)                 :: parambox
+        integer(kind=i64), intent(in)                       :: log_unit
+        integer(kind=i64), intent(in), optional             :: rdf_unit, msd_unit
+        real(kind=dp), intent(in), dimension(:,:), optional :: init_pos
+        logical, intent(in)                                 :: thermost
         ! Internal_variables
-        integer(kind=I64)                             :: idx_, stp
-        real(kind=DP), dimension(:, :), allocatable   :: actual_force, new_force
+        integer(kind=I64)                                   :: idx_, stp
+        real(kind=DP), dimension(:, :), allocatable         :: actual_force, new_force
+        logical                                             :: present_rdf, present_msd
 
         allocate(actual_force(parambox%n_particles, 3))
         allocate(new_force(parambox%n_particles, 3))
+
+        present_rdf = present(rdf_unit)
+        present_msd = present(msd_unit)
 
         ! Posem tot abans a la caixa unitaria
         do idx_ = 1, parambox%n_particles
@@ -42,7 +49,9 @@ contains
             vel = vel + (((actual_force + new_force) / (2.0_DP * parambox%mass)) * parambox%timestep)
 
             ! Apliquem el thermostat
-            ! call andersen_thermostat(vel, parambox)
+            if (thermost) then
+                call andersen_thermostat(vel, parambox)
+            end if
 
             ! We write information of the system to the log unit
             if (mod(stp, parambox%write_file) == 0_i64) then
@@ -50,9 +59,15 @@ contains
                                               boundary=parambox%box, mass=parambox%mass, dens=parambox%density)
             end if
 
-            !if (present(rdf_unit)) then
+            if (present_rdf) then
+                if (mod(stp, parambox%write_stats) == 0) then
+                    call write_rdf(stp=stp, parambox=parambox, pos=pos, write_unit=rdf_unit)
+                end if
+            end if
+
+            !if (present(msd_unit)) then
             !    if (mod(stp, parambox%write_stats) == 0) then
-            !        print*, 'RDF'
+            !        print *, 'MSD'
             !end if
 
             ! Swapping de matrius
@@ -80,6 +95,8 @@ contains
         do idx_ = 1, parambox%n_particles
             call pbc(pos(idx_, :), parambox%box)
         end do
+
+        actual_force = 0.0_dp
 
         do stp = 1, parambox%n_steps
             

@@ -1,6 +1,8 @@
 module writers_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
-    use            :: therm_m, only: calc_vdw_pbc, calc_KE, compute_com_momenta, calc_pressure
+    use            :: therm_m,         only: calc_vdw_pbc, calc_KE, compute_com_momenta, calc_pressure
+    use            :: interface_m,     only: databloc_params_t
+    use            :: analysis_m,      only: g_r
     implicit none
 
     public :: write_frame, write_system_information, write_velocities
@@ -31,7 +33,7 @@ contains
         real(kind=dp), intent(in)                 :: cutoff, boundary, mass, dens
         integer(kind=i64), intent(in)             :: frame, unit
         ! Internal variables
-        real(kind=dp)                 :: pe_calc, ke_calc, temper, com_vel_mod, calc_press, time
+        real(kind=dp)                 :: pe_calc, ke_calc, temper, com_vel_mod, calc_press
         real(kind=dp), dimension(3)   :: com_vector
         integer(kind=i64)             :: n_p
 
@@ -67,9 +69,39 @@ contains
 
     end subroutine write_velocities
 
-    !subroutine write_rdf()
+    subroutine write_rdf(stp, parambox, pos, write_unit)
+        implicit none
+        ! In/Out variables
+        integer(kind=i64), intent(in)              :: stp
+        type(databloc_params_t), intent(in)        :: parambox
+        real(kind=dp), intent(in), dimension(:,:)  :: pos
+        integer(kind=i64), intent(in)              :: write_unit
+        ! Internal variables
+        real(kind=dp), allocatable, dimension(:,:) :: gdr_mat
+        integer(kind=i64)                          :: i_aux
 
-    !end subroutine write_rdf
+        allocate(gdr_mat(2, parambox%gdr_num_bins))
+
+        call g_r(gr_mat=gdr_mat, dens=parambox%density, pos=pos,&
+        max_dist=parambox%gdr_max_dist, box=parambox%box)
+
+        if (stp == parambox%write_stats) then
+            ! Write the distance binning
+            do i_aux = 1, parambox%gdr_num_bins
+                write(unit=write_unit, fmt='(ES18.8e4)', advance='no') gdr_mat(1, i_aux)
+            end do
+            write(unit=write_unit, fmt='(A)') ""
+        end if
+
+        do i_aux = 1, parambox%gdr_num_bins
+            write(unit=write_unit, fmt='(ES18.8e4)', advance='no') gdr_mat(2, i_aux)
+        end do
+        write(unit=write_unit, fmt='(A)') ""
+
+
+        deallocate(gdr_mat)
+
+    end subroutine write_rdf
 
 
 

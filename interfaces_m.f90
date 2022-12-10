@@ -12,8 +12,7 @@ module interface_m
         real(kind=dp)       :: cutoff_set
         integer(kind=i64)   :: n_particles   
         real(kind=dp)       :: density       ! Reduced density
-        integer(kind=i64)   :: n_steps       ! Equilibration steps
-        integer(kind=i64)   :: n_steps_prod  ! Production steps  
+        integer(kind=i64)   :: n_steps       ! Equilibration steps  
         ! I/O variables
         integer(kind=i64)   :: write_file    ! How often do we write log information
         integer(kind=i64)   :: write_stats   ! How often do we write statistics
@@ -23,6 +22,9 @@ module interface_m
         real(kind=dp)       :: andersen_nu   ! Andersen parameter
         ! Simulation-dependent variables
         real(kind=dp)       :: box           ! Size of the box
+        ! Analysis variables
+        integer(kind=i64)   :: gdr_num_bins
+        real(kind=dp)       :: gdr_max_dist
     end type
 
 
