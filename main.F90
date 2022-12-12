@@ -24,8 +24,8 @@ program main
     ! ~ Definim parametres ~
     
     ! Particle related variables
-    datablock%lj_epsilon = 0.998_dp
-    datablock%lj_sigma = 3.4_dp
+    datablock%lj_epsilon = 0.998_dp  ! [kJ/mol]
+    datablock%lj_sigma = 3.4_dp      ! [A]
     datablock%mass = 1.0_dp
     ! Simulation related variables
     datablock%timestep = 0.001_dp
@@ -43,7 +43,7 @@ program main
     ! Simulation-dependent variables
     datablock%box = (real(datablock%n_particles, kind=DP)/datablock%density) ** (1.0_DP / 3.0_DP)
     ! Analysis dependent variables
-    datablock%gdr_num_bins = 750_i64
+    datablock%gdr_num_bins = 500_i64
     datablock%gdr_max_dist = datablock%box * 0.75_dp
 
     ! ~ Realitzem l'equilibrat del sistema ~
@@ -64,7 +64,8 @@ program main
     call init_positions_sc(rho=datablock%density, pos=positions)
     call bimodal_dist_velocities(vel=velocities, temp=datablock%ref_temp, mass=datablock%mass)
 
-    print '(A,F16.8,A,F16.8)', "Initial potential energy=", calc_vdw_pbc(pos=positions, cutoff=datablock%cutoff_set, boundary=datablock%box), " Initial kinetic energy=", calc_KE(velocities)
+    print '(A,F16.8,A,F16.8)', "Initial potential energy=", calc_vdw_pbc(pos=positions, cutoff=datablock%cutoff_set, boundary=datablock%box), &
+                               " Initial kinetic energy=", calc_KE(velocities)
 
     call write_velocities(vel=velocities, unit_nr=vel_unit, step=0_i64)
 
@@ -84,6 +85,7 @@ program main
     ! ----------------------------------------------------------------------------------------------------------------------------------------
     
     ! ~ Realitzem la producció del sistema ~
+    
     datablock%ref_temp = 1.2_dp
     datablock%n_steps = 500000_i64
     init_position = positions
@@ -108,6 +110,7 @@ program main
     call velocity_verlet(vel=velocities, pos=positions, parambox=datablock, &
                          log_unit=log_unit, thermost=.TRUE., rdf_unit=rdf_unit, &
                          msd_unit=msd_unit, init_pos=init_position)
+    
     call cpu_time(time1)
 
     print '(A,F12.8,A,F12.8)', "Execution time for production: ", time1 - time0, " time/iteration: ", (time1 - time0) / datablock%n_steps

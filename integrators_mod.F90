@@ -55,8 +55,7 @@ contains
 
             ! We write information of the system to the log unit
             if (mod(stp, parambox%write_file) == 0_i64) then
-                call write_system_information(pos=pos, vel=vel,cutoff=parambox%cutoff_set, frame=stp, unit=log_unit, &
-                                              boundary=parambox%box, mass=parambox%mass, dens=parambox%density)
+                call write_system_information(pos=pos, vel=vel, frame=stp, unit=log_unit, parambox=parambox)
             end if
 
             if (present_rdf) then
@@ -118,8 +117,7 @@ contains
         
             ! Escribim al output
             if (mod(stp, parambox%write_file) == 0_i64) then
-                call write_system_information(pos=pos, vel=vel,cutoff=parambox%cutoff_set, frame=stp, unit=log_unit, &
-                                              boundary=parambox%box, mass=parambox%mass, dens=parambox%density)
+                call write_system_information(pos=pos, vel=vel, frame=stp, unit=log_unit, parambox=parambox)
             end if
 
         end do

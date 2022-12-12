@@ -11,11 +11,11 @@ contains
         ! In/Out variables
         real(kind=dp), dimension(:,:), intent(in) :: positions
         real(kind=dp), intent(in)                 :: dens, lenth, temp, cutoff
-        real(kind=dp)                             :: press, virial
+        real(kind=dp)                             :: press
         ! Internal variables
         integer(kind=i64)                         :: i_part, j_part, n_p
         real(kind=dp), dimension(3)               :: rij, fij
-        real(kind=dp)                             :: dij, cutoff2
+        real(kind=dp)                             :: dij, cutoff2, virial
 
         press = 0.0_dp
         virial = 0.0_dp
@@ -37,12 +37,12 @@ contains
 
                 if (cutoff2 > dij) cycle
 
-                fij(1) = (48.0_dp / dij**7 - 24.0_dp /dij**4) * rij(1)
-                fij(2) = (48.0_dp / dij**7 - 24.0_dp /dij**4) * rij(2)
-                fij(3) = (48.0_dp / dij**7 - 24.0_dp /dij**4) * rij(3)
+                fij(1) = (48.0_dp / dij**7 - 24.0_dp / dij**4) * rij(1)
+                fij(2) = (48.0_dp / dij**7 - 24.0_dp / dij**4) * rij(2)
+                fij(3) = (48.0_dp / dij**7 - 24.0_dp / dij**4) * rij(3)
 
                 ! Upgredagem el valor de la pressio
-                virial = virial + (dot_product(rij, fij))
+                virial = virial + dot_product(rij, fij)
 
             end do
         end do
@@ -102,7 +102,7 @@ contains
                     dist = dist ** 3
                     
                     ecalc = (4.0_DP * ((1.0_DP / (dist**2)) - (1.0_DP/(dist)))) - &
-                        (4.0_DP * ((1.0_DP / (cutoff2**6))-(1.0_DP/(cutoff2**3))))
+                            (4.0_DP * ((1.0_DP / (cutoff2**6)) - (1.0_DP/(cutoff2**3))))
             
                     vdw_calc = vdw_calc + ecalc
                 

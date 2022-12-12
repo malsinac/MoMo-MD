@@ -47,11 +47,8 @@ contains
         end do
 
         ! Calculem g(r) en unitats reals
-        dens = dens * (parambox%lj_sigma ** 3) ! \rho' -> \rho
-        dr = dr * parambox%lj_sigma            ! dr' -> dr
         do i_ax = 1, n_bins
             associate(r => gr_mat(1, i_ax), gdr => gr_mat(2, i_ax))
-                r = r * parambox%lj_sigma              ! r' -> r
                 div_bin = dens * 4.0_dp * pi * r * r * dr
                 gdr = gdr / div_bin
             end associate

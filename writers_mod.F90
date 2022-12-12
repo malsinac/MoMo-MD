@@ -26,29 +26,41 @@ contains
         write(unit=unit_nr, fmt='(A)') ""
     end subroutine write_frame
 
-    subroutine write_system_information(pos, vel, cutoff, frame, unit, boundary, mass, dens)
+    subroutine write_system_information(pos, vel, frame, unit, parambox)
         implicit none
         ! In/Out variables
         real(kind=dp), intent(in), dimension(:,:) :: pos, vel
-        real(kind=dp), intent(in)                 :: cutoff, boundary, mass, dens
         integer(kind=i64), intent(in)             :: frame, unit
+        type(databloc_params_t), intent(in)       :: parambox
         ! Internal variables
-        real(kind=dp)                 :: pe_calc, ke_calc, temper, com_vel_mod, calc_press
-        real(kind=dp), dimension(3)   :: com_vector
-        integer(kind=i64)             :: n_p
+        real(kind=dp)                             :: pe_calc, ke_calc, temper, com_vel_mod, calc_press, time
+        real(kind=dp), dimension(3)               :: com_vector
+        integer(kind=i64)                         :: n_p
+        real(kind=dp), parameter                  :: kb = 8.314462618e-3  ! [kJ / mol K]
+        real(kind=dp), parameter                  :: na = 6.02214076e23
 
         n_p = size(pos, dim=1, kind=i64)
 
-        pe_calc = calc_vdw_pbc(pos=pos, cutoff=cutoff, boundary=boundary)
+        pe_calc = calc_vdw_pbc(pos=pos, cutoff=parambox%cutoff_set, boundary=parambox%box)  ! u'
         ke_calc = calc_KE(vel)
-        temper = (2.0_DP / (3.0_DP * n_p)) * ke_calc
-        call compute_com_momenta(vel=vel, com_momenta=com_vector, mass=mass)
+        temper = (2.0_DP / (3.0_DP * real(n_p, kind=dp))) * ke_calc  ! T'
+        call compute_com_momenta(vel=vel, com_momenta=com_vector, mass=parambox%mass)
         com_vel_mod = norm2(com_vector)
-        calc_press = calc_pressure(dens=dens, lenth=boundary, positions=pos, temp=temper, cutoff=cutoff)
-        ! time = real(frame, kind=dp) * 
+        calc_press = calc_pressure(dens=parambox%density, lenth=parambox%box, positions=pos, &
+                                   temp=temper, cutoff=parambox%cutoff_set) ! P'
+        time = real(frame, kind=dp) * parambox%timestep
 
-        write(unit=unit, fmt='(A,I6,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4)') "t: ", frame, " KE=", ke_calc, " PE=", pe_calc, &
-        " H=",ke_calc+pe_calc, " T=", temper, " P=", calc_press, " COM mod=", com_vel_mod
+        ! We do the transformation to real units. Those are
+        !    P = [Pa], E = [kJ/mol], dens = [g/cm³]  ! T = [K]
+        temper = temper * (parambox%lj_epsilon / kb)
+        calc_press = calc_press * ( parambox%lj_epsilon / (1.0e3_dp * na * (1.0e-10_dp * parambox%lj_sigma)**3) )
+        pe_calc = pe_calc * parambox%lj_epsilon
+        ke_calc = ke_calc !* algo que depen del temps, que es algo chungo
+        time = time / sqrt(1.0_dp)
+
+
+        write(unit=unit, fmt='(A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4)') "t: ", time, " KE=", ke_calc, " PE=", pe_calc, &
+        " H=", ke_calc+pe_calc, " T=", temper, " P=", calc_press, " COM mod=", com_vel_mod
 
     end subroutine write_system_information
 
