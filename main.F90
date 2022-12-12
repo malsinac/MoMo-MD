@@ -26,7 +26,7 @@ program main
     ! Particle related variables
     datablock%lj_epsilon = 0.998_dp  ! [kJ/mol]
     datablock%lj_sigma = 3.4_dp      ! [A]
-    datablock%mass = 1.0_dp
+    datablock%mass = 40.0_dp         ! [g/mol]
     ! Simulation related variables
     datablock%timestep = 0.001_dp
     datablock%cutoff_set = 2.5_dp
@@ -43,8 +43,8 @@ program main
     ! Simulation-dependent variables
     datablock%box = (real(datablock%n_particles, kind=DP)/datablock%density) ** (1.0_DP / 3.0_DP)
     ! Analysis dependent variables
-    datablock%gdr_num_bins = 500_i64
-    datablock%gdr_max_dist = datablock%box * 0.75_dp
+    datablock%gdr_num_bins = 100_i64
+    datablock%gdr_max_dist = datablock%box
 
     ! ~ Realitzem l'equilibrat del sistema ~
 
@@ -62,7 +62,7 @@ program main
     allocate(init_position(datablock%n_particles, 3))
     
     call init_positions_sc(rho=datablock%density, pos=positions)
-    call bimodal_dist_velocities(vel=velocities, temp=datablock%ref_temp, mass=datablock%mass)
+    call bimodal_dist_velocities(vel=velocities, temp=datablock%ref_temp)
 
     print '(A,F16.8,A,F16.8)', "Initial potential energy=", calc_vdw_pbc(pos=positions, cutoff=datablock%cutoff_set, boundary=datablock%box), &
                                " Initial kinetic energy=", calc_KE(velocities)

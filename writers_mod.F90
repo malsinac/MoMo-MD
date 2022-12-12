@@ -36,27 +36,27 @@ contains
         real(kind=dp)                             :: pe_calc, ke_calc, temper, com_vel_mod, calc_press, time
         real(kind=dp), dimension(3)               :: com_vector
         integer(kind=i64)                         :: n_p
-        real(kind=dp), parameter                  :: kb = 8.314462618e-3  ! [kJ / mol K]
-        real(kind=dp), parameter                  :: na = 6.02214076e23
+        real(kind=dp), parameter                  :: kb = 8.314462618e-3_dp  ! [kJ / mol K]
+        real(kind=dp), parameter                  :: na = 6.02214076e23_dp
 
         n_p = size(pos, dim=1, kind=i64)
 
         pe_calc = calc_vdw_pbc(pos=pos, cutoff=parambox%cutoff_set, boundary=parambox%box)  ! u'
         ke_calc = calc_KE(vel)
         temper = (2.0_DP / (3.0_DP * real(n_p, kind=dp))) * ke_calc  ! T'
-        call compute_com_momenta(vel=vel, com_momenta=com_vector, mass=parambox%mass)
+        call compute_com_momenta(vel=vel, com_momenta=com_vector)
         com_vel_mod = norm2(com_vector)
         calc_press = calc_pressure(dens=parambox%density, lenth=parambox%box, positions=pos, &
                                    temp=temper, cutoff=parambox%cutoff_set) ! P'
         time = real(frame, kind=dp) * parambox%timestep
 
         ! We do the transformation to real units. Those are
-        !    P = [Pa], E = [kJ/mol], dens = [g/cm³]  ! T = [K]
-        temper = temper * (parambox%lj_epsilon / kb)
-        calc_press = calc_press * ( parambox%lj_epsilon / (1.0e3_dp * na * (1.0e-10_dp * parambox%lj_sigma)**3) )
-        pe_calc = pe_calc * parambox%lj_epsilon
-        ke_calc = ke_calc !* algo que depen del temps, que es algo chungo
-        time = time / sqrt(1.0_dp)
+        !    P = [Pa], E = [kJ/mol], dens = [g/cm³], T = [K], t = [ps]
+        !temper = temper * (parambox%lj_epsilon / kb)  ! [K]
+        !calc_press = calc_press * ( (parambox%lj_epsilon * na ) / (1.0e3_dp * (1.0e-10_dp * parambox%lj_sigma)**3) )  ! [Pa]
+        !pe_calc = pe_calc * parambox%lj_epsilon
+        !ke_calc = ke_calc !* algo que depen del temps, que es algo chungo
+        !time = (time / sqrt(parambox%lj_epsilon / ((parambox%mass * 1.0e-3_dp) * (parambox%lj_sigma * 1.0e-10_dp)**2))) * 1.0e12_dp
 
 
         write(unit=unit, fmt='(A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4)') "t: ", time, " KE=", ke_calc, " PE=", pe_calc, &

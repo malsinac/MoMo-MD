@@ -20,7 +20,7 @@ contains
         type(databloc_params_t), intent(in)          :: parambox
         ! Internal variables
         integer(kind=i64)                            :: n_bins, i_ax, index_mat, j_ax, n_p
-        real(kind=dp)                                :: dr, dist, div_bin
+        real(kind=dp)                                :: dr, dist, dv
         real(kind=dp), parameter                     :: PI = acos(-1.0_dp)
         real(kind=dp), dimension(3)                  :: rij
 
@@ -41,19 +41,20 @@ contains
                 
                 ! Apliquem el cutoff de maxima distancia
                 if (dist > parambox%gdr_max_dist) cycle
+                
                 index_mat = int(dist/dr, kind=i64) + 1_i64
-                gr_mat(2, index_mat) = gr_mat(2, index_mat) + 2.0_dp
+                gr_mat(2, index_mat) = gr_mat(2, index_mat) + 1.0_dp
             end do
         end do
 
         ! Calculem g(r) en unitats reals
         do i_ax = 1, n_bins
             associate(r => gr_mat(1, i_ax), gdr => gr_mat(2, i_ax))
-                div_bin = dens * 4.0_dp * pi * r * r * dr
-                gdr = gdr / div_bin
+                dv = (4.0_dp * pi / 3.0_dp) * ((r + dr*0.5_dp)**3 - (r - dr*0.5_dp)**3)
+                gdr = gdr / (dens * dv)
             end associate
         end do
-        gr_mat(1,:) = gr_mat(1,:) * parambox%lj_sigma
+        ! gr_mat(1,:) = gr_mat(1,:) * parambox%lj_sigma
 
     end subroutine g_r
 

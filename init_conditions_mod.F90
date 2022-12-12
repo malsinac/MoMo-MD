@@ -6,11 +6,11 @@ module init_cond_m
 
 contains
 
-    pure subroutine bimodal_dist_velocities(vel, temp, mass)
+    pure subroutine bimodal_dist_velocities(vel, temp)
         implicit none
         ! In/Out variables
         real(kind=dp), dimension(:,:), intent(inout) :: vel
-        real(kind=dp), intent(in)                    :: temp, mass
+        real(kind=dp), intent(in)                    :: temp
         ! Internal variables
         real(kind=dp)                                :: sqrt_temp, total_mass
         integer(kind=i64)                            :: i_pos, j_dim, n_p, mid_idx, k_counter
@@ -41,7 +41,7 @@ contains
             v_cm(1) = v_cm(1) + vel(i_pos, 1)
             v_cm(2) = v_cm(2) + vel(i_pos, 2)
             v_cm(3) = v_cm(3) + vel(i_pos, 3)
-            total_mass = total_mass + mass
+            total_mass = total_mass + 1.0_dp
         end do
 
         v_cm = v_cm / total_mass

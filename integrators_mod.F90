@@ -37,7 +37,7 @@ contains
         do stp = 1, parambox%n_steps
 
             ! Calculem r(t)
-            pos = pos + (vel*parambox%timestep) + ((actual_force/(2.0_DP * parambox%mass)) * (parambox%timestep ** 2))
+            pos = pos + (vel*parambox%timestep) + ((actual_force * 0.5_dp) * (parambox%timestep ** 2))
 
             ! Apliquem pbcs
             do idx_ = 1, parambox%n_particles
@@ -46,7 +46,7 @@ contains
 
             ! Calculem forces a r(t+dt)
             call calc_vdw_force(pos=pos, cutoff=parambox%cutoff_set, forces=new_force, boundary=parambox%box)
-            vel = vel + (((actual_force + new_force) / (2.0_DP * parambox%mass)) * parambox%timestep)
+            vel = vel + (((actual_force + new_force) * 0.5_dp) * parambox%timestep)
 
             ! Apliquem el thermostat
             if (thermost) then
@@ -113,7 +113,7 @@ contains
                 call pbc(pos(idx_, :), parambox%box)
             end do
             
-            vel = vel + ((actual_force/parambox%mass) * parambox%timestep)
+            vel = vel + (actual_force * parambox%timestep)
         
             ! Escribim al output
             if (mod(stp, parambox%write_file) == 0_i64) then

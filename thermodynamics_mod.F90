@@ -19,7 +19,7 @@ contains
 
         press = 0.0_dp
         virial = 0.0_dp
-        cutoff2 = cutoff ** 2
+        cutoff2 = cutoff * cutoff
         n_p = size(positions, dim=1, kind=i64)
 
         do i_part = 1, n_p
@@ -46,7 +46,7 @@ contains
 
             end do
         end do
-        press = (dens*temp) + ((1.0_dp/(lenth**3))*virial)
+        press = (dens*temp) + ((1.0_dp / (3.0_dp * lenth * lenth * lenth)) * virial)
     end function calc_pressure
 
     pure function calc_KE(vel) result(ke)
@@ -171,12 +171,11 @@ contains
         end do
     end subroutine pbc
 
-    pure subroutine compute_com_momenta(vel, com_momenta, mass)
+    pure subroutine compute_com_momenta(vel, com_momenta)
         implicit none
         ! In/Out variables
         real(kind=DP), dimension(:, :), intent(in) :: vel
         real(kind=DP), dimension(3), intent(out)   :: com_momenta
-        real(kind=dp), intent(in)                  :: mass
         ! Internal variables
         integer(kind=I64)                          :: i_aux, n_p
         real(kind=dp)                              :: total_mass
@@ -189,7 +188,7 @@ contains
             com_momenta(1) = com_momenta(1) + vel(i_aux,1)
             com_momenta(2) = com_momenta(2) + vel(i_aux,2)
             com_momenta(3) = com_momenta(3) + vel(i_aux,3)
-            total_mass = total_mass + mass
+            total_mass = total_mass + 1.0_dp
         end do
 
         com_momenta = com_momenta / total_mass
