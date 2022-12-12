@@ -5,11 +5,11 @@ module writers_m
     use            :: analysis_m,      only: g_r, calc_msd
     implicit none
 
-    public :: write_frame, write_system_information, write_velocities
+    public :: write_frame_file, write_system_information, write_velocities
 
 contains
 
-    subroutine write_frame(unit_nr, pos, stp_c)
+    subroutine write_frame_file(unit_nr, pos, stp_c)
         implicit none
         integer(kind=I64), intent(in)             :: unit_nr, stp_c
         real(kind=DP), dimension(:,:), intent(in) :: pos
@@ -24,7 +24,7 @@ contains
         pos(i_aux, 3)
         end do
         write(unit=unit_nr, fmt='(A)') ""
-    end subroutine write_frame
+    end subroutine write_frame_file
 
     subroutine write_system_information(pos, vel, frame, unit, parambox)
         implicit none

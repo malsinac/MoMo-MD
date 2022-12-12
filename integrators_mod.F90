@@ -1,32 +1,33 @@
 module integrtors_m
     use, intrinsic :: iso_fortran_env, only: dp => real64, i64 => int64
     use            :: therm_m,         only: pbc, calc_vdw_force
-    use            :: writers_m,       only: write_system_information, write_rdf, write_msd
+    use            :: writers_m,       only: write_system_information, write_rdf, write_msd, write_frame_file
     use            :: interface_m,     only: databloc_params_t
     use            :: thermostats_m,   only: andersen_thermostat
 
 contains
 
     subroutine velocity_verlet(pos, vel, parambox, log_unit, rdf_unit, msd_unit, &
-        init_pos, thermost)
+        init_pos, thermost, frame_unit)
         implicit none
         ! In/Out variables
         real(kind=dp), intent(inout), dimension(:,:)        :: pos, vel
         type(databloc_params_t), intent(in)                 :: parambox
         integer(kind=i64), intent(in)                       :: log_unit
-        integer(kind=i64), intent(in), optional             :: rdf_unit, msd_unit
+        integer(kind=i64), intent(in), optional             :: rdf_unit, msd_unit, frame_unit
         real(kind=dp), intent(in), dimension(:,:), optional :: init_pos
         logical, intent(in)                                 :: thermost
         ! Internal_variables
         integer(kind=I64)                                   :: idx_, stp
         real(kind=DP), dimension(:, :), allocatable         :: actual_force, new_force
-        logical                                             :: present_rdf, present_msd
+        logical                                             :: present_rdf, present_msd, present_frame
 
         allocate(actual_force(parambox%n_particles, 3))
         allocate(new_force(parambox%n_particles, 3))
 
         present_rdf = present(rdf_unit)
         present_msd = present(msd_unit)
+        present_frame = present(frame_unit)
 
         ! Posem tot abans a la caixa unitaria
         do idx_ = 1, parambox%n_particles
@@ -69,6 +70,12 @@ contains
                 if (mod(stp, parambox%write_stats) == 0) then
                     call write_msd(stp=stp, parambox=parambox, pos=pos, initpos=init_pos,&
                     write_unit=msd_unit)
+                end if
+            end if
+
+            if (present_frame) then
+                if (mod(stp, parambox%write_frame) == 0) then
+                    call write_frame_file(frame_unit, pos, stp)
                 end if
             end if
 

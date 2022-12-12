@@ -16,6 +16,7 @@ module interface_m
         ! I/O variables
         integer(kind=i64)   :: write_file    ! How often do we write log information
         integer(kind=i64)   :: write_stats   ! How often do we write statistics
+        integer(kind=i64)   :: write_frame   ! How often write frame
         character(len=2048) :: sim_name      ! Name of the simulation we are doing
         ! Thermostat variables
         real(kind=dp)       :: ref_temp      ! Reference temperature for thermostats and velocity initialization 
