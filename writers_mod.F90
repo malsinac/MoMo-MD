@@ -53,9 +53,9 @@ contains
         ! We do the transformation to real units. Those are
         !    P = [Pa], E = [kJ/mol], dens = [g/cm³], T = [K], t = [ps]
         !temper = temper * (parambox%lj_epsilon / kb)  ! [K]
-        !calc_press = calc_press * ( (parambox%lj_epsilon * na ) / (1.0e3_dp * (1.0e-10_dp * parambox%lj_sigma)**3) )  ! [Pa]
+        !calc_press = calc_press * ( parambox%lj_epsilon / (1.0e3_dp * na * (1.0e-10_dp * parambox%lj_sigma)**3) )  ! [Pa]
         !pe_calc = pe_calc * parambox%lj_epsilon
-        !ke_calc = ke_calc !* algo que depen del temps, que es algo chungo
+        !ke_calc = ke_calc * parambox%lj_epsilon
         !time = (time / sqrt(parambox%lj_epsilon / ((parambox%mass * 1.0e-3_dp) * (parambox%lj_sigma * 1.0e-10_dp)**2))) * 1.0e12_dp
 
 

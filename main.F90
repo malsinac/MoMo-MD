@@ -5,7 +5,10 @@ program main
     use            :: integrtors_m,    only: velocity_verlet, euler_integrator
     use            :: writers_m,       only: write_velocities
     use            :: interface_m,     only: databloc_params_t
+    use            :: readers_m,       only: read_nml
     implicit none
+
+    ! ~ Memory definition ~
 
     ! Derived types
     type(databloc_params_t) :: datablock
@@ -13,39 +16,25 @@ program main
     ! Scalar values 
     real(kind=DP)       :: time0, time1
     integer(kind=I64)   :: log_unit, vel_unit, rdf_unit, msd_unit, frame_unit
-    character(len=2048) :: vel_name, log_name, rdf_name, msd_name, frame_name
+    integer             :: status_cli
+    character(len=2048) :: log_name, vel_name, rdf_name, msd_name, frame_name, nml_path
 
     ! Arrays
     real(kind=DP), allocatable, dimension(:, :) :: positions, velocities, init_position
 
+    call get_command_argument(1, nml_path, status=status_cli)
+    if (status_cli /= 0) stop 1
     
-    ! ~ Definim parametres ~
-    
-    ! Particle related variables
-    datablock%lj_epsilon = 0.998_dp  ! [kJ/mol]
-    datablock%lj_sigma = 3.4_dp      ! [A]
-    datablock%mass = 40.0_dp         ! [g/mol]
-    ! Simulation related variables
-    datablock%timestep = 0.001_dp
-    datablock%n_particles = 343_I64
-    datablock%density = 0.1_DP
-    datablock%n_steps = 100000_I64
-    ! I/O variables
-    datablock%write_file = 100_I64
-    datablock%write_stats = 1000_i64
-    datablock%write_frame = 0_i64
-    datablock%sim_name = "dens_0-01"
-    ! Thermostat variables
-    datablock%ref_temp = 100_dp
-    datablock%andersen_nu = 0.2_dp
-    ! Simulation-dependent variables
-    datablock%box = (real(datablock%n_particles, kind=DP)/datablock%density) ** (1.0_DP / 3.0_DP)
-    datablock%cutoff_set = 0.5_dp * datablock%box
-    ! Analysis dependent variables
-    datablock%gdr_num_bins = 100_i64
-    datablock%gdr_max_dist = datablock%box
+
+    ! ~ Definim parametres i inicialitzem parametres ~
+    call read_nml(param_file=nml_path, datablock=datablock)
+
+    ! ----------------------------------------------------------------------------------------------------------------------------------------
 
     ! ~ Realitzem l'equilibrat del sistema ~
+    
+    datablock%n_steps = 100000_I64
+    datablock%ref_temp = 100.0_dp
 
     log_name = trim(datablock%sim_name) // "_heating.log"
     vel_name = trim(datablock%sim_name) // "_heating.vel"
@@ -77,7 +66,7 @@ program main
 
     call write_velocities(velocities, vel_unit, datablock%n_steps)
 
-    print '(A,F12.8,A,F12.8)', "Execution time for heating:", time1 - time0, " time/iteration: ", (time1 - time0) / datablock%n_steps
+    print '(A,F12.8,A,F12.8)', "Execution time for heating: ", time1 - time0, " time/iteration: ", (time1 - time0) / datablock%n_steps
     close(log_unit)
     close(vel_unit)
 
@@ -87,7 +76,6 @@ program main
     
     datablock%ref_temp = 1.2_dp
     datablock%n_steps = 500000_i64
-    datablock%write_frame = 10000_i64
     init_position = positions
 
     ! Files

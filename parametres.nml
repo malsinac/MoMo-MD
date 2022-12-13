@@ -1,0 +1,24 @@
+&PARAMS
+! Particle related variables
+  lj_epsilon=0.998_dp, ! [kJ/mol]
+  lj_sigma = 3.4_dp,   ! [A]
+  mass = 40.0_dp,      ! [g/mol]
+
+  ! Simulation related variables
+  timestep = 0.001_dp,
+  n_particles = 343_I64,
+  density = 0.1_DP,
+
+  ! I/O variables
+  write_file = 100_I64,
+  write_stats = 1000_i64,
+  write_frame = 100_i64,
+  sim_name = "dens_0-01",
+
+  ! Thermostat variables
+  andersen_nu = 0.2_dp
+
+  ! Analysis dependent variables
+  gdr_num_bins = 100_i64
+
+/
