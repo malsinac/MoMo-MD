@@ -55,11 +55,12 @@ contains
 
     end subroutine bimodal_dist_velocities
 
-    subroutine init_positions_sc(rho, pos)
+    subroutine init_positions_sc(rho, pos, gen_log_unt)
         implicit none
         ! In/Out variables
         real(kind=DP), intent(inout), dimension(:, :) :: pos
         real(kind=DP), intent(in)                     :: rho
+        integer(kind=i64), optional                   :: gen_log_unt
         ! Internal variables
         integer(kind=I64)                             :: M, i, j, k, p, N
         real(kind=DP)                                 :: L, a
@@ -69,8 +70,9 @@ contains
         L = (real(N, kind=DP)/rho) ** (1.0_DP/3.0_DP)
         a = L/M
 
-        print '(A)', ""
-        print '(A,I3,A,I3,A,F12.8,A,F12.8)', "sc lattice, parameters: N=", N, " M=", M, " L=", L, " a=", a
+        if (present(gen_log_unt)) then
+            write(unit=gen_log_unt, fmt='(A,I3,A,I3,A,F12.8,A,F12.8)') "sc lattice, parameters: N=", N, " M=", M, " L=", L, " a=", a
+        end if
 
         do i = 0, M - 1
             do j = 0, M - 1

@@ -15,9 +15,9 @@ program main
     
     ! Scalar values 
     real(kind=DP)       :: time0, time1
-    integer(kind=I64)   :: log_unit, vel_unit, rdf_unit, msd_unit, frame_unit
+    integer(kind=I64)   :: log_unit, vel_unit, rdf_unit, msd_unit, frame_unit, gen_log_unit
     integer             :: status_cli
-    character(len=2048) :: log_name, vel_name, rdf_name, msd_name, frame_name, nml_path
+    character(len=2048) :: log_name, vel_name, rdf_name, msd_name, frame_name, nml_path, gen_log_name
 
     ! Arrays
     real(kind=DP), allocatable, dimension(:, :) :: positions, velocities, init_position
@@ -28,6 +28,7 @@ program main
 
     ! ~ Definim parametres i inicialitzem parametres ~
     call read_nml(param_file=nml_path, datablock=datablock)
+    gen_log_name = trim(datablock%sim_name) // "_general.log"
 
     ! ----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -40,6 +41,8 @@ program main
     vel_name = trim(datablock%sim_name) // "_heating.vel"
 
     ! Files
+    open(newunit=gen_log_unit, file=trim(gen_log_name), access='sequential', action='write',&
+    status='replace', form='formatted')
     open(newunit=log_unit, file=trim(log_name), access='sequential', action='write',&
     status='replace', form='formatted')
     open(newunit=vel_unit, file=trim(vel_name), access='sequential', action='write',&
@@ -52,8 +55,9 @@ program main
     call init_positions_sc(rho=datablock%density, pos=positions)
     call bimodal_dist_velocities(vel=velocities, temp=datablock%ref_temp)
 
-    print '(A,F16.8,A,F16.8)', "Initial potential energy=", calc_vdw_pbc(pos=positions, cutoff=datablock%cutoff_set, boundary=datablock%box), &
-                               " Initial kinetic energy=", calc_KE(velocities)
+    Write(unit=gen_log_unit, fmt='(A,F16.8,A,F16.8)') "Initial potential energy=", &
+                                                      calc_vdw_pbc(pos=positions, cutoff=datablock%cutoff_set, boundary=datablock%box), &
+                                                      " Initial kinetic energy=", calc_KE(velocities)
 
     call write_velocities(vel=velocities, unit_nr=vel_unit, step=0_i64)
 
@@ -66,7 +70,7 @@ program main
 
     call write_velocities(velocities, vel_unit, datablock%n_steps)
 
-    print '(A,F12.8,A,F12.8)', "Execution time for heating: ", time1 - time0, " time/iteration: ", (time1 - time0) / datablock%n_steps
+    write(unit=gen_log_unit, fmt='(A,F12.8,A,F12.8)') "Execution time for heating: ", time1 - time0, " time/iteration: ", (time1 - time0) / datablock%n_steps
     close(log_unit)
     close(vel_unit)
 
@@ -104,13 +108,14 @@ program main
     
     call cpu_time(time1)
 
-    print '(A,F12.8,A,F12.8)', "Execution time for production: ", time1 - time0, " time/iteration: ", (time1 - time0) / datablock%n_steps
+    write(unit=gen_log_unit, fmt='(A,F12.8,A,F12.8)') "Execution time for production: ", time1 - time0, " time/iteration: ", (time1 - time0) / datablock%n_steps
 
     close(log_unit)
     close(vel_unit)
     close(rdf_unit)
     close(msd_unit)
     close(frame_unit)
+    close(gen_log_unit)
 
     deallocate(positions)
     deallocate(velocities)
