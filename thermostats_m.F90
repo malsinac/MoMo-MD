@@ -19,11 +19,11 @@ subroutine andersen_thermostat(vel, parambox)
 
     sig = sqrt(parambox%ref_temp)
 
-    do j_part = 1, size(vel, dim=1)
+    do j_part = 1, size(vel, dim=2)
         call random_number( harvest = rand_numb )
         if (rand_numb < parambox%andersen_nu) then
             do i_coord = 1, 3
-                vel(j_part, i_coord) = r8_normal_ab(a=0.0_DP, b=sig)
+                vel(i_coord, j_part) = r8_normal_ab(a=0.0_DP, b=sig)
             end do 
         end if
     end do 

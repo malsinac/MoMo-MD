@@ -24,6 +24,9 @@ program main
 
     call get_command_argument(1, nml_path, status=status_cli)
     if (status_cli /= 0) stop 1
+
+    ! Inicialitzem el RNG
+    call random_seed()
     
 
     ! ~ Definim parametres i inicialitzem parametres ~
@@ -49,8 +52,8 @@ program main
     status='replace', form='formatted')
 
     ! ~ Inicialitzem les posicions i velocitats~
-    allocate(positions(datablock%n_particles, 3), velocities(datablock%n_particles, 3))
-    allocate(init_position(datablock%n_particles, 3))
+    allocate(positions(3, datablock%n_particles), velocities(3, datablock%n_particles))
+    allocate(init_position(3, datablock%n_particles))
     
     call init_positions_sc(rho=datablock%density, pos=positions)
     call bimodal_dist_velocities(vel=velocities, temp=datablock%ref_temp)
@@ -78,14 +81,14 @@ program main
     
     ! ~ Realitzem la producció del sistema ~
     
-    datablock%ref_temp = 1.2_dp
+    datablock%ref_temp = 2.0_dp
     datablock%n_steps = 500000_i64
     init_position = positions
 
     ! Files
     log_name = trim(datablock%sim_name) // "_prod.log"
     vel_name = trim(datablock%sim_name) // "_prod.vel"
-    frame_name = trim(datablock%sim_name) // "_prod.trr"
+    frame_name = trim(datablock%sim_name) // "_prod.xyz"
     rdf_name = trim(datablock%sim_name) // "_rdf.dat"
     msd_name = trim(datablock%sim_name) // "_msd.dat"
 

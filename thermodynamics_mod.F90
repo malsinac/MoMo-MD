@@ -6,63 +6,67 @@ module therm_m
 
 contains
 
-    function calc_pressure(dens, lenth, positions, temp, cutoff) result(press)
+    function calc_pressure(lenth, positions, temp, cutoff) result(press)
         implicit none
         ! In/Out variables
         real(kind=dp), dimension(:,:), intent(in) :: positions
-        real(kind=dp), intent(in)                 :: dens, lenth, temp, cutoff
+        real(kind=dp), intent(in)                 :: lenth, temp, cutoff
         real(kind=dp)                             :: press
         ! Internal variables
         integer(kind=i64)                         :: i_part, j_part, n_p
         real(kind=dp), dimension(3)               :: rij, fij
-        real(kind=dp)                             :: dij, cutoff2, virial
+        real(kind=dp)                             :: dij, cutoff2, virial, vol
 
         press = 0.0_dp
         virial = 0.0_dp
         cutoff2 = cutoff * cutoff
-        n_p = size(positions, dim=1, kind=i64)
+        n_p = size(positions, dim=2, kind=i64)
+        vol = lenth ** 3
+        rij = 0.0_dp
+        fij = 0.0_dp
 
-        do i_part = 1, n_p
-            do j_part = i_part+1, n_p
+        do i_part = 1, n_p - 1
+            do j_part = i_part + 1, n_p
 
                 ! Calculem rij
-                rij(1) = positions(i_part, 1) - positions(j_part, 1)
-                rij(2) = positions(i_part, 2) - positions(j_part, 2)
-                rij(3) = positions(i_part, 3) - positions(j_part, 3)
+                rij(1) = positions(1, i_part) - positions(1, j_part)
+                rij(2) = positions(2, i_part) - positions(2, j_part)
+                rij(3) = positions(3, i_part) - positions(3, j_part)
 
-                call pbc(rij, lenth)
+                call pbc(x=rij, l_=lenth)
                 
                 ! Calculem fij
                 dij = (rij(1)**2) + (rij(2)**2) + (rij(3)**2)
 
-                if (cutoff2 > dij) cycle
+                if (dij < cutoff2) then
 
-                fij(1) = (48.0_dp / dij**7 - 24.0_dp / dij**4) * rij(1)
-                fij(2) = (48.0_dp / dij**7 - 24.0_dp / dij**4) * rij(2)
-                fij(3) = (48.0_dp / dij**7 - 24.0_dp / dij**4) * rij(3)
+                    fij(1) = (48.0_dp / dij**7 - 24.0_dp / dij**4) * rij(1)
+                    fij(2) = (48.0_dp / dij**7 - 24.0_dp / dij**4) * rij(2)
+                    fij(3) = (48.0_dp / dij**7 - 24.0_dp / dij**4) * rij(3)
 
-                ! Upgredagem el valor de la pressio
-                virial = virial + dot_product(rij, fij)
+                    ! Upgredagem el valor de la pressio
+                    virial = virial + dot_product(rij, fij)
+                end if
 
             end do
         end do
-        press = (dens*temp) + ((1.0_dp / (3.0_dp * lenth * lenth * lenth)) * virial)
+        press = (real(n_p, kind=dp)*temp / vol) + ((1.0_dp / (3.0_dp * vol)) * virial)
     end function calc_pressure
 
     pure function calc_KE(vel) result(ke)
         implicit none
         ! In/Out variables
-        real(kind=DP) :: ke
+        real(kind=DP)                             :: ke
         real(kind=DP), dimension(:,:), intent(in) :: vel
         ! Internal variables
-        integer(kind=I64) :: n_p, i
+        integer(kind=I64)                         :: n_p, i
 
         ! Variable initialization
-        n_p = size(vel, dim=1, kind=I64)
+        n_p = size(vel, dim=2, kind=I64)
         ke = 0.0_DP
         
         do i = 1, n_p
-            ke = ke + sum(vel(i, :)**2)
+            ke = ke + sum(vel(:, i)**2)
         end do
 
         ! Final multiplications
@@ -82,22 +86,22 @@ contains
 
         ! Initializing parameters
         vdw_calc = 0.0_DP
-        num_particles = size(pos, dim=1, kind=I64)
+        num_particles = size(pos, dim=2, kind=I64)
 
-        cutoff2 = cutoff ** 2.0_DP
-        rij = 0
+        cutoff2 = cutoff ** 2
+        rij = 0.0_dp
 
-        do j = 1, num_particles
-            do i = j+1, num_particles
-                rij(1) = pos(i, 1) - pos(j, 1)
-                rij(2) = pos(i, 2) - pos(j, 2)
-                rij(3) = pos(i, 3) - pos(j, 3)
+        do j = 1, num_particles - 1
+            do i = j + 1, num_particles
+                rij(1) = pos(1, j) - pos(1, i)
+                rij(2) = pos(2, j) - pos(2, i)
+                rij(3) = pos(3, j) - pos(3, i)
                 
                 call pbc(x=rij, l_=boundary)
 
                 dist = (rij(1)**2) + (rij(2)**2) + (rij(3)**2)
 
-                if (dist <= cutoff2) then
+                if (dist < cutoff2) then
                     
                     dist = dist ** 3
                     
@@ -116,39 +120,40 @@ contains
         !In/Out variables
         real(kind=DP), intent(in), dimension(:, :)    :: pos
         real(kind=DP), intent(in)                     :: cutoff, boundary
-        real(kind=DP), intent(inout), dimension(:, :) :: forces
+        real(kind=DP), intent(out), dimension(:, :)   :: forces
         ! Internal variables
         integer(kind=I64)           :: n_part, i, j
         real(kind=DP)               :: dist, cutoff2
         real(kind=DP), dimension(3) :: rij
 
-        n_part = size(pos, dim=1, kind=I64)
+        n_part = size(pos, dim=2, kind=I64)
 
         forces = 0.0_DP
         rij = 0.0_dp
-        cutoff2 = cutoff ** 2
+        cutoff2 = cutoff * cutoff
 
-        do i = 1, n_part
-            do j = i+1, n_part
+        do i = 1, n_part - 1
+            do j = i + 1, n_part
                 
-                rij(1) = pos(i, 1) - pos(j, 1)
-                rij(2) = pos(i, 2) - pos(j, 2)
-                rij(3) = pos(i, 3) - pos(j, 3)
+                rij(1) = pos(1, i) - pos(1, j)
+                rij(2) = pos(2, i) - pos(2, j)
+                rij(3) = pos(3, i) - pos(3, j)
                 
                 call pbc(x=rij, l_=boundary)
                 
                 dist = (rij(1)**2) + (rij(2)**2) + (rij(3)**2)
                 
-                if (dist <= cutoff2) then
+                if (dist < cutoff) then
+                    
                     ! Calculem la forc entre particula i, j
 
-                    forces(i, 1) = forces(i, 1) + (48.0_DP / dist**7 - 24 / dist**4) * rij(1)
-                    forces(i, 2) = forces(i, 2) + (48.0_DP / dist**7 - 24 / dist**4) * rij(2)
-                    forces(i, 3) = forces(i, 3) + (48.0_DP / dist**7 - 24 / dist**4) * rij(3)
+                    forces(1, i) = forces(1, i) + (48.0_DP / dist**7 - 24.0_dp / dist**4) * rij(1)
+                    forces(2, i) = forces(2, i) + (48.0_DP / dist**7 - 24.0_dp / dist**4) * rij(2)
+                    forces(3, i) = forces(3, i) + (48.0_DP / dist**7 - 24.0_dp / dist**4) * rij(3)
 
-                    forces(j, 1) = forces(j, 1) - (48.0_DP / dist**7 - 24 / dist**4) * rij(1)
-                    forces(j, 2) = forces(j, 2) - (48.0_DP / dist**7 - 24 / dist**4) * rij(2)
-                    forces(j, 3) = forces(j, 3) - (48.0_DP / dist**7 - 24 / dist**4) * rij(3)
+                    forces(1, j) = forces(1, j) - (48.0_DP / dist**7 - 24.0_dp / dist**4) * rij(1)
+                    forces(2, j) = forces(2, j) - (48.0_DP / dist**7 - 24.0_dp / dist**4) * rij(2)
+                    forces(3, j) = forces(3, j) - (48.0_DP / dist**7 - 24.0_dp / dist**4) * rij(3)
                 end if
             end do
         end do
@@ -182,12 +187,12 @@ contains
 
         com_momenta = 0.0_DP
         total_mass = 0.0_dp
-        n_p = size(vel, dim=1, kind=I64)
+        n_p = size(vel, dim=2, kind=I64)
 
         do i_aux = 1, n_p
-            com_momenta(1) = com_momenta(1) + vel(i_aux,1)
-            com_momenta(2) = com_momenta(2) + vel(i_aux,2)
-            com_momenta(3) = com_momenta(3) + vel(i_aux,3)
+            com_momenta(1) = com_momenta(1) + vel(1, i_aux)
+            com_momenta(2) = com_momenta(2) + vel(2, i_aux)
+            com_momenta(3) = com_momenta(3) + vel(3, i_aux)
             total_mass = total_mass + 1.0_dp
         end do
 

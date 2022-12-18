@@ -25,7 +25,7 @@ contains
         real(kind=dp), dimension(3)                  :: rij
 
         n_bins = size(gr_mat, dim=2, kind=i64)
-        n_p = size(pos, dim=1, kind=i64)
+        n_p = size(pos, dim=2, kind=i64)
         dr = parambox%gdr_max_dist / real(n_bins, kind=dp)
 
         gr_mat(1,:) = [(real(i_ax, dp)*dr, i_ax=1, n_bins)]
@@ -35,7 +35,7 @@ contains
         do j_ax = 1, n_p - 1
             do i_ax = j_ax + 1, n_p
                 ! Calculem rij
-                rij = pos(j_ax,:) - pos(i_ax,:)
+                rij = pos(:, j_ax) - pos(:, i_ax)
                 call pbc(rij, parambox%box)
                 dist = norm2(rij)
                 
@@ -43,7 +43,7 @@ contains
                 if (dist > parambox%gdr_max_dist) cycle
                 
                 index_mat = int(dist/dr, kind=i64) + 1_i64
-                gr_mat(2, index_mat) = gr_mat(2, index_mat) + 1.0_dp
+                gr_mat(2, index_mat) = gr_mat(2, index_mat) + 2.0_dp
             end do
         end do
 
@@ -54,32 +54,32 @@ contains
                 gdr = gdr / (dens * dv)
             end associate
         end do
-        ! gr_mat(1,:) = gr_mat(1,:) * parambox%lj_sigma
+        gr_mat(1,:) = gr_mat(1,:) * parambox%lj_sigma
 
     end subroutine g_r
 
-    subroutine calc_msd(msd_vec, pos, init_pos, box)
+    subroutine calc_msd(msd_vec, pos, init_pos, box, lj_sigma)
         implicit none
         ! In/Out variables
         real(kind=dp), intent(out)                  :: msd_vec
         real(kind=dp), dimension(:,:), intent(in)   :: pos, init_pos
-        real(kind=dp), intent(in)                   :: box
+        real(kind=dp), intent(in)                   :: box, lj_sigma
         ! Internal variables
         integer(kind=i64)                           :: j_part, n_p
         real(kind=dp)                               :: dd
         real(kind=dp), dimension(3)                 :: rij
 
-        n_p = size(pos, dim=1, kind=i64)
+        n_p = size(pos, dim=2, kind=i64)
         msd_vec = 0.0_dp
 
         do j_part = 1, n_p
-            rij = pos(j_part, :) - init_pos(j_part, :)
+            rij = pos(:, j_part) - init_pos(:, j_part)
             call pbc(rij, box)
             dd = (rij(1) ** 2) + (rij(2) ** 2) + (rij(3) ** 2)
             msd_vec = msd_vec + dd
         end do
 
-        msd_vec = msd_vec / real(n_p, kind=dp)
+        msd_vec = (msd_vec * lj_sigma) / real(n_p, kind=dp)
 
     end subroutine calc_msd
 

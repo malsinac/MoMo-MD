@@ -22,8 +22,8 @@ contains
         real(kind=DP), dimension(:, :), allocatable         :: actual_force, new_force
         logical                                             :: present_rdf, present_msd, present_frame
 
-        allocate(actual_force(parambox%n_particles, 3))
-        allocate(new_force(parambox%n_particles, 3))
+        allocate(actual_force(3, parambox%n_particles))
+        allocate(new_force(3, parambox%n_particles))
 
         present_rdf = present(rdf_unit)
         present_msd = present(msd_unit)
@@ -31,23 +31,27 @@ contains
 
         ! Posem tot abans a la caixa unitaria
         do idx_ = 1, parambox%n_particles
-            call pbc(pos(idx_, :), parambox%box)
+            call pbc(pos(:, idx_), parambox%box)
         end do
 
         call calc_vdw_force(pos=pos, cutoff=parambox%cutoff_set, forces=actual_force, boundary=parambox%box)
         do stp = 1, parambox%n_steps
 
             ! Calculem r(t)
-            pos = pos + (vel*parambox%timestep) + ((actual_force * 0.5_dp) * (parambox%timestep ** 2))
+            do idx_ = 1, parambox%n_particles
+                pos(:, idx_) = pos(:, idx_) + (vel(:, idx_)*parambox%timestep) + ((actual_force(:, idx_) * 0.5_dp) * (parambox%timestep ** 2))
+            end do
 
             ! Apliquem pbcs
             do idx_ = 1, parambox%n_particles
-                call pbc(pos(idx_, :), parambox%box)
+                call pbc(pos(:, idx_), parambox%box)
             end do
 
             ! Calculem forces a r(t+dt)
             call calc_vdw_force(pos=pos, cutoff=parambox%cutoff_set, forces=new_force, boundary=parambox%box)
-            vel = vel + (((actual_force + new_force) * 0.5_dp) * parambox%timestep)
+            do idx_ = 1, parambox%n_particles
+                vel(:, idx_) = vel(:, idx_) + (((actual_force(:, idx_) + new_force(:, idx_)) * 0.5_dp) * parambox%timestep)
+            end do
 
             ! Apliquem el thermostat
             if (thermost) then
@@ -60,21 +64,21 @@ contains
             end if
 
             if (present_rdf) then
-                if (mod(stp, parambox%write_stats) == 0) then
+                if (mod(stp, parambox%write_stats) == 0 .and. parambox%write_file /= 0_i64) then
                     call write_rdf(stp=stp, parambox=parambox, pos=pos, &
                     write_unit=rdf_unit)
                 end if
             end if
 
             if (present_msd) then
-                if (mod(stp, parambox%write_stats) == 0) then
+                if (mod(stp, parambox%write_stats) == 0 .and. parambox%write_file /= 0_i64) then
                     call write_msd(stp=stp, parambox=parambox, pos=pos, initpos=init_pos,&
                     write_unit=msd_unit)
                 end if
             end if
 
             if (present_frame) then
-                if (mod(stp, parambox%write_frame) == 0) then
+                if (mod(stp, parambox%write_frame) == 0 .and. parambox%write_file /= 0_i64) then
                     call write_frame_file(frame_unit, pos, stp)
                 end if
             end if
@@ -102,7 +106,7 @@ contains
 
         ! Posem tot abans a la caixa unitaria
         do idx_ = 1, parambox%n_particles
-            call pbc(pos(idx_, :), parambox%box)
+            call pbc(pos(:, idx_), parambox%box)
         end do
 
         actual_force = 0.0_dp
@@ -117,7 +121,7 @@ contains
             
             ! Apliquem pbcs
             do idx_ = 1, parambox%n_particles
-                call pbc(pos(idx_, :), parambox%box)
+                call pbc(pos(:, idx_), parambox%box)
             end do
             
             vel = vel + (actual_force * parambox%timestep)

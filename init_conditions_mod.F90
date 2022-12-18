@@ -17,7 +17,7 @@ contains
         real(kind=dp), dimension(3)                  :: v_cm
 
         vel = 0.0_dp
-        n_p = size(vel, dim=1)
+        n_p = size(vel, dim=2, kind=i64)
         sqrt_temp = sqrt(temp)
         mid_idx = ceiling(real(n_p, kind=dp) * 3.0_dp / 2.0_dp, kind=i64)
         k_counter = 1_i64
@@ -28,9 +28,9 @@ contains
         do i_pos = 1, n_p
             do j_dim = 1, 3
                 if (k_counter <= mid_idx) then 
-                    vel(i_pos, j_dim) = sqrt_temp
+                    vel(j_dim, i_pos) = sqrt_temp
                 else if (k_counter > mid_idx) then
-                    vel(i_pos, j_dim) = -sqrt_temp
+                    vel(j_dim, i_pos) = -sqrt_temp
                 end if
                 k_counter = k_counter + 1_i64
             end do
@@ -38,9 +38,9 @@ contains
 
         ! Calculem la velocitat del centre de masses
         do i_pos = 1, n_p
-            v_cm(1) = v_cm(1) + vel(i_pos, 1)
-            v_cm(2) = v_cm(2) + vel(i_pos, 2)
-            v_cm(3) = v_cm(3) + vel(i_pos, 3)
+            v_cm(1) = v_cm(1) + vel(1, i_pos)
+            v_cm(2) = v_cm(2) + vel(2, i_pos)
+            v_cm(3) = v_cm(3) + vel(3, i_pos)
             total_mass = total_mass + 1.0_dp
         end do
 
@@ -48,9 +48,9 @@ contains
 
         ! Restem la velocitat de centre de masses a totes les velocitats perque aquesta sigui 0
         do i_pos = 1, n_p
-            vel(i_pos, 1) = vel(i_pos, 1) - v_cm(1)
-            vel(i_pos, 2) = vel(i_pos, 2) - v_cm(2)
-            vel(i_pos, 3) = vel(i_pos, 3) - v_cm(3)
+            vel(1, i_pos) = vel(1, i_pos) - v_cm(1)
+            vel(2, i_pos) = vel(2, i_pos) - v_cm(2)
+            vel(3, i_pos) = vel(3, i_pos) - v_cm(3)
         end do
 
     end subroutine bimodal_dist_velocities
@@ -65,7 +65,7 @@ contains
         integer(kind=I64)                             :: M, i, j, k, p, N
         real(kind=DP)                                 :: L, a
 
-        N = size(pos, dim=1, kind=I64)
+        N = size(pos, dim=2, kind=I64)
         M = int(N ** (1.0_DP / 3.0_DP), kind=I64) + 1
         L = (real(N, kind=DP)/rho) ** (1.0_DP/3.0_DP)
         a = L/M
@@ -78,7 +78,7 @@ contains
             do j = 0, M - 1
                 do k = 0, M - 1
                     p = (k+1) + (j*M) + (i * (M**2))
-                    pos(p, :) = [real(i, kind=DP)*a, real(j, kind=DP)*a, real(k, kind=DP)*a]
+                    pos(:, p) = [real(i, kind=DP)*a, real(j, kind=DP)*a, real(k, kind=DP)*a]
                 end do
             end do
         end do
