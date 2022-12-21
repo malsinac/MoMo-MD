@@ -57,7 +57,7 @@ contains
         calc_press = (calc_press * parambox%lj_epsilon * 1.0e33_dp) / (na * (parambox%lj_sigma ** 3)) ! [Pa]
         pe_calc = pe_calc * parambox%lj_epsilon  ! [kJ/mol]
         ke_calc = ke_calc * parambox%lj_epsilon  ! [kJ/mol]
-        time = (time / sqrt(parambox%lj_epsilon / ((parambox%mass * 1.0e-33_dp) * (parambox%lj_sigma**2)))) * 1.0e12_dp  ! [ps]
+        time = (time / sqrt(parambox%lj_epsilon / ((parambox%mass * 1.0e-6_dp) * ((parambox%lj_sigma * 1.0e-10_dp)**2)))) * 1.0e12_dp  ! [ps]
 
 
         write(unit=unit, fmt='(A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4,A,ES18.8e4)') "t: ", time, " KE=", ke_calc, " PE=", pe_calc, &
@@ -93,9 +93,11 @@ contains
         real(kind=dp), allocatable, dimension(:,:) :: gdr_mat
         integer(kind=i64)                          :: i_aux
 
-        allocate(gdr_mat(2, parambox%gdr_num_bins))
+        !if (.NOT. allocated(gdr_mat)) then
+            allocate(gdr_mat(2, parambox%gdr_num_bins))
+        !end if
 
-        call g_r(gr_mat=gdr_mat, dens=parambox%density, pos=pos, parambox=parambox)
+        call g_r(gr_mat=gdr_mat, pos=pos, parambox=parambox)
 
         if (stp == parambox%write_stats) then
             ! Write the distance binning
@@ -126,7 +128,7 @@ contains
         call calc_msd(msd_vec=msd_val, pos=pos, init_pos=initpos, box=parambox%box, lj_sigma=parambox%lj_sigma)
 
         time = real(stp, kind=dp) * parambox%timestep
-        time = (time / sqrt(parambox%lj_epsilon / ((parambox%mass * 1.0e-3_dp) * (parambox%lj_sigma * 1.0e-10_dp)**2))) * 1.0e12_dp  ! [ps]
+        time = (time / sqrt(parambox%lj_epsilon / ((parambox%mass * 1.0e-6_dp) * (parambox%lj_sigma * 1.0e-10_dp)**2))) * 1.0e12_dp  ! [ps]
 
         ! Output is ps vs A
 

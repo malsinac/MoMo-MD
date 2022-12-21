@@ -81,7 +81,7 @@ program main
     
     ! ~ Realitzem la producció del sistema ~
     
-    datablock%ref_temp = 2.0_dp
+    datablock%ref_temp = 1.2_dp
     datablock%n_steps = 500000_i64
     init_position = positions
 
